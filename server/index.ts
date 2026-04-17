@@ -10,11 +10,12 @@ import { RoomType } from '../types/Rooms'
 import { SkyOffice } from './rooms/SkyOffice'
 
 const port = Number(process.env.PORT || 2567)
+const host = process.env.HOST || '0.0.0.0'
 const app = express()
 
 app.use(cors())
 app.use(express.json())
-// app.use(express.static('dist'))
+app.use(express.static('client/dist'))
 
 const server = http.createServer(app)
 const gameServer = new Server({
@@ -42,5 +43,5 @@ gameServer.define(RoomType.CUSTOM, SkyOffice).enableRealtimeListing()
 // register colyseus monitor AFTER registering your room handlers
 app.use('/colyseus', monitor())
 
-gameServer.listen(port)
-console.log(`Listening on ws://localhost:${port}`)
+gameServer.listen(port, host)
+console.log(`Listening on ws://${host}:${port}`)
