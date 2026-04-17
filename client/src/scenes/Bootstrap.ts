@@ -3,6 +3,7 @@ import Network from '../services/Network'
 import { BackgroundMode } from '../../../types/BackgroundMode'
 import store from '../stores'
 import { setRoomJoined } from '../stores/RoomStore'
+import { CHARACTER_KEYS } from '../data/avatars'
 
 export default class Bootstrap extends Phaser.Scene {
   private preloadComplete = false
@@ -28,6 +29,8 @@ export default class Bootstrap extends Phaser.Scene {
     this.load.image('sun_moon', 'assets/background/sun_moon.png')
 
     this.load.tilemapTiledJSON('tilemap', 'assets/map/map.json')
+    this.load.image('builder_office_archive', 'assets/archive/Room_Builder_Office.png')
+    this.load.image('builder_floors_archive', 'assets/archive/Room_Builder_Floors.png')
     this.load.spritesheet('tiles_wall', 'assets/map/FloorAndGround.png', {
       frameWidth: 32,
       frameHeight: 32,
@@ -37,8 +40,8 @@ export default class Bootstrap extends Phaser.Scene {
       frameHeight: 64,
     })
     this.load.spritesheet('computers', 'assets/items/computer.png', {
-      frameWidth: 96,
-      frameHeight: 64,
+      frameWidth: 48,
+      frameHeight: 40,
     })
     this.load.spritesheet('whiteboards', 'assets/items/whiteboard.png', {
       frameWidth: 64,
@@ -60,21 +63,15 @@ export default class Bootstrap extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     })
-    this.load.spritesheet('adam', 'assets/character/adam.png', {
+    this.load.spritesheet('office_addons', 'assets/tileset/Modern_Office_Addons.png', {
       frameWidth: 32,
-      frameHeight: 48,
+      frameHeight: 32,
     })
-    this.load.spritesheet('ash', 'assets/character/ash.png', {
-      frameWidth: 32,
-      frameHeight: 48,
-    })
-    this.load.spritesheet('lucy', 'assets/character/lucy.png', {
-      frameWidth: 32,
-      frameHeight: 48,
-    })
-    this.load.spritesheet('nancy', 'assets/character/nancy.png', {
-      frameWidth: 32,
-      frameHeight: 48,
+    CHARACTER_KEYS.forEach((characterKey) => {
+      this.load.spritesheet(characterKey, `assets/character/${characterKey}.png`, {
+        frameWidth: 32,
+        frameHeight: 48,
+      })
     })
 
     this.load.on('complete', () => {
