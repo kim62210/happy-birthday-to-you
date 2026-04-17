@@ -17,6 +17,7 @@ import Game from '../scenes/Game'
 import { getColorByString } from '../util'
 import { useAppDispatch, useAppSelector } from '../hooks'
 import { MessageType, setFocused, setShowChat } from '../stores/ChatStore'
+import { ko } from '../i18n/ko'
 
 const Backdrop = styled.div`
   position: fixed;
@@ -43,11 +44,13 @@ const FabWrapper = styled.div`
 const ChatHeader = styled.div`
   position: relative;
   height: 35px;
-  background: #000000a7;
+  background: rgba(33, 31, 29, 0.94);
   border-radius: 10px 10px 0px 0px;
+  border: 1px solid rgba(210, 188, 168, 0.28);
+  border-bottom: none;
 
   h3 {
-    color: #fff;
+    color: var(--ui-text);
     margin: 7px;
     font-size: 17px;
     text-align: center;
@@ -64,8 +67,8 @@ const ChatBox = styled(Box)`
   height: 100%;
   width: 100%;
   overflow: auto;
-  background: #2c2c2c;
-  border: 1px solid #00000029;
+  background: #262422;
+  border: 1px solid rgba(210, 188, 168, 0.28);
 `
 
 const MessageWrapper = styled.div`
@@ -88,26 +91,27 @@ const MessageWrapper = styled.div`
   }
 
   .notification {
-    color: grey;
+    color: var(--ui-subtext);
     font-weight: normal;
   }
 
   :hover {
-    background: #3a3a3a;
+    background: #34312f;
   }
 `
 
 const InputWrapper = styled.form`
   box-shadow: 10px 10px 10px #00000018;
-  border: 1px solid #42eacb;
+  border: 1px solid var(--ui-accent);
   border-radius: 0px 0px 10px 10px;
   display: flex;
   flex-direction: row;
-  background: linear-gradient(180deg, #000000c1, #242424c0);
+  background: linear-gradient(180deg, rgba(33, 31, 29, 0.96), rgba(44, 42, 40, 0.96));
 `
 
 const InputTextField = styled(InputBase)`
   border-radius: 0px 0px 10px 10px;
+  color: var(--ui-text);
   input {
     padding: 5px;
   }
@@ -119,7 +123,7 @@ const EmojiPickerWrapper = styled.div`
   right: 16px;
 `
 
-const dateFormatter = new Intl.DateTimeFormat('en', {
+const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   timeStyle: 'short',
   dateStyle: 'short',
 })
@@ -226,9 +230,9 @@ export default function Chat() {
         {showChat ? (
           <>
             <ChatHeader>
-              <h3>Chat</h3>
+              <h3>{ko.chat.title}</h3>
               <IconButton
-                aria-label="close dialog"
+                aria-label={ko.common.close}
                 className="close"
                 onClick={() => dispatch(setShowChat(false))}
                 size="small"
@@ -262,7 +266,7 @@ export default function Chat() {
                 inputRef={inputRef}
                 autoFocus={focused}
                 fullWidth
-                placeholder="Press Enter to chat"
+                placeholder={ko.chat.placeholder}
                 value={inputValue}
                 onKeyDown={handleKeyDown}
                 onChange={handleChange}
@@ -277,7 +281,7 @@ export default function Chat() {
                   setReadyToSubmit(false)
                 }}
               />
-              <IconButton aria-label="emoji" onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
+              <IconButton aria-label={ko.chat.emoji} onClick={() => setShowEmojiPicker(!showEmojiPicker)}>
                 <InsertEmoticonIcon />
               </IconButton>
             </InputWrapper>
@@ -286,7 +290,7 @@ export default function Chat() {
           <FabWrapper>
             <Fab
               color="secondary"
-              aria-label="showChat"
+              aria-label={ko.chat.open}
               onClick={() => {
                 dispatch(setShowChat(true))
                 dispatch(setFocused(true))

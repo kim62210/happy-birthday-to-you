@@ -12,13 +12,11 @@ import { Navigation } from 'swiper'
 import 'swiper/css'
 import 'swiper/css/navigation'
 
-import Adam from '../images/login/Adam_login.png'
-import Ash from '../images/login/Ash_login.png'
-import Lucy from '../images/login/Lucy_login.png'
-import Nancy from '../images/login/Nancy_login.png'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { setLoggedIn } from '../stores/UserStore'
 import { getAvatarString, getColorByString } from '../util'
+import { ko } from '../i18n/ko'
+import { AVATARS } from '../data/avatars'
 
 import phaserGame from '../PhaserGame'
 import Game from '../scenes/Game'
@@ -28,16 +26,17 @@ const Wrapper = styled.form`
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: #222639;
+  background: var(--ui-surface);
   border-radius: 16px;
   padding: 36px 60px;
   box-shadow: 0px 0px 5px #0000006f;
+  border: 1px solid rgba(210, 188, 168, 0.24);
 `
 
 const Title = styled.p`
   margin: 5px;
   font-size: 20px;
-  color: #c2c2c2;
+  color: var(--ui-subtext);
   text-align: center;
 `
 
@@ -53,7 +52,7 @@ const RoomName = styled.div`
 
   h3 {
     font-size: 24px;
-    color: #eee;
+    color: var(--ui-text);
   }
 `
 
@@ -63,7 +62,7 @@ const RoomDescription = styled.div`
   overflow-wrap: anywhere;
   overflow-y: auto;
   font-size: 16px;
-  color: #c2c2c2;
+  color: var(--ui-subtext);
   display: flex;
   justify-content: center;
 `
@@ -71,7 +70,7 @@ const RoomDescription = styled.div`
 const SubTitle = styled.h3`
   width: 160px;
   font-size: 16px;
-  color: #eee;
+  color: var(--ui-text);
   text-align: center;
 `
 
@@ -127,12 +126,7 @@ const Warning = styled.div`
   gap: 3px;
 `
 
-const avatars = [
-  { name: 'adam', img: Adam },
-  { name: 'ash', img: Ash },
-  { name: 'lucy', img: Lucy },
-  { name: 'nancy', img: Nancy },
-]
+const avatars = [...AVATARS]
 
 // shuffle the avatars array
 for (let i = avatars.length - 1; i > 0; i--) {
@@ -167,7 +161,7 @@ export default function LoginDialog() {
 
   return (
     <Wrapper onSubmit={handleSubmit}>
-      <Title>Joining</Title>
+      <Title>{ko.login.joining}</Title>
       <RoomName>
         <Avatar style={{ background: getColorByString(roomName) }}>
           {getAvatarString(roomName)}
@@ -179,7 +173,7 @@ export default function LoginDialog() {
       </RoomDescription>
       <Content>
         <Left>
-          <SubTitle>Select an avatar</SubTitle>
+          <SubTitle>{ko.login.selectAvatar}</SubTitle>
           <Swiper
             modules={[Navigation]}
             navigation
@@ -200,11 +194,11 @@ export default function LoginDialog() {
           <TextField
             autoFocus
             fullWidth
-            label="Name"
+            label={ko.common.name}
             variant="outlined"
             color="secondary"
             error={nameFieldEmpty}
-            helperText={nameFieldEmpty && 'Name is required'}
+            helperText={nameFieldEmpty && ko.login.nameRequired}
             onInput={(e) => {
               setName((e.target as HTMLInputElement).value)
             }}
@@ -212,8 +206,9 @@ export default function LoginDialog() {
           {!videoConnected && (
             <Warning>
               <Alert variant="outlined" severity="warning">
-                <AlertTitle>Warning</AlertTitle>
-                No webcam/mic connected - <strong>connect one for best experience!</strong>
+                <AlertTitle>{ko.login.webcamWarningTitle}</AlertTitle>
+                {ko.login.webcamWarning}{' '}
+                <strong>{ko.login.webcamWarningStrong}</strong>
               </Alert>
               <Button
                 variant="outlined"
@@ -222,21 +217,21 @@ export default function LoginDialog() {
                   game.network.webRTC?.getUserMedia()
                 }}
               >
-                Connect Webcam
+                {ko.login.connectWebcam}
               </Button>
             </Warning>
           )}
 
           {videoConnected && (
             <Warning>
-              <Alert variant="outlined">Webcam connected!</Alert>
+              <Alert variant="outlined">{ko.login.webcamConnected}</Alert>
             </Warning>
           )}
         </Right>
       </Content>
       <Bottom>
         <Button variant="contained" color="secondary" size="large" type="submit">
-          Join
+          {ko.login.join}
         </Button>
       </Bottom>
     </Wrapper>

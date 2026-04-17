@@ -1,11 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;800&display=swap');
+
+:root {
+  --font-ko: 'Noto Sans KR', 'Pretendard Variable', Pretendard, 'Apple SD Gothic Neo',
+    'Malgun Gothic', sans-serif;
+  --ui-surface: #2c2a28;
+  --ui-surface-strong: #211f1d;
+  --ui-border: #d2bca8;
+  --ui-accent: #c86458;
+  --ui-accent-soft: #e8b4ac;
+  --ui-text: #f5ede4;
+  --ui-subtext: #d0c6bb;
+}
+
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu',
-    'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-ko);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   box-sizing: border-box;
+  background: #121110;
+  color: var(--ui-text);
 }
 
 *,

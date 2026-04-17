@@ -18,7 +18,7 @@ export default class Item extends Phaser.Physics.Arcade.Sprite {
   setDialogBox(text: string) {
     const innerText = this.scene.add
       .text(0, 0, text)
-      .setFontFamily('Arial')
+      .setFontFamily('Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif')
       .setFontSize(12)
       .setColor('#000000')
 
@@ -48,7 +48,7 @@ export default class Item extends Phaser.Physics.Arcade.Sprite {
   setStatusBox(text: string) {
     const innerText = this.scene.add
       .text(0, 0, text)
-      .setFontFamily('Arial')
+      .setFontFamily('Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif')
       .setFontSize(12)
       .setColor('#000000')
 

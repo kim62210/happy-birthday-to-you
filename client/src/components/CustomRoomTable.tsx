@@ -19,6 +19,7 @@ import PeopleAltIcon from '@mui/icons-material/PeopleAlt'
 import LockIcon from '@mui/icons-material/Lock'
 import { useAppSelector } from '../hooks'
 import { getAvatarString, getColorByString } from '../util'
+import { ko } from '../i18n/ko'
 
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
@@ -81,7 +82,8 @@ const PasswordDialog = styled(Dialog)`
   }
 
   .MuiDialog-paper {
-    background: #222639;
+    background: var(--ui-surface);
+    color: var(--ui-text);
   }
 `
 
@@ -122,7 +124,7 @@ export const CustomRoomTable = () => {
   }
 
   return availableRooms.length === 0 ? (
-    <MessageText>There are no custom rooms now, create one or join the public lobby.</MessageText>
+    <MessageText>{ko.rooms.empty}</MessageText>
   ) : (
     <>
       <CustomRoomTableContainer component={Paper}>
@@ -130,9 +132,9 @@ export const CustomRoomTable = () => {
           <TableHead>
             <TableRow>
               <TableCell></TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>ID</TableCell>
+              <TableCell>{ko.common.name}</TableCell>
+              <TableCell>{ko.common.description}</TableCell>
+              <TableCell>방 ID</TableCell>
               <TableCell align="center">
                 <PeopleAltIcon />
               </TableCell>
@@ -159,7 +161,7 @@ export const CustomRoomTable = () => {
                   <TableCell>{roomId}</TableCell>
                   <TableCell align="center">{clients}</TableCell>
                   <TableCell align="center">
-                    <Tooltip title={hasPassword ? 'Password required' : ''}>
+                    <Tooltip title={hasPassword ? ko.rooms.passwordRequired : ''}>
                       <Button
                         variant="outlined"
                         color="secondary"
@@ -174,7 +176,7 @@ export const CustomRoomTable = () => {
                       >
                         <div className="join-wrapper">
                           {hasPassword && <LockIcon className="lock-icon" />}
-                          Join
+                          {ko.common.join}
                         </div>
                       </Button>
                     </Tooltip>
@@ -188,14 +190,14 @@ export const CustomRoomTable = () => {
       <PasswordDialog open={showPasswordDialog} onClose={resetPasswordDialog}>
         <form onSubmit={handlePasswordSubmit}>
           <DialogContent className="dialog-content">
-            <MessageText>This a private room, please enter password:</MessageText>
+            <MessageText>{ko.rooms.privateRoom}</MessageText>
             <TextField
               autoFocus
               fullWidth
               error={passwordFieldEmpty}
-              helperText={passwordFieldEmpty && 'Required'}
+              helperText={passwordFieldEmpty && ko.rooms.required}
               value={password}
-              label="Password"
+              label={ko.common.password}
               type="password"
               variant="outlined"
               color="secondary"
@@ -205,16 +207,16 @@ export const CustomRoomTable = () => {
             />
             {showPasswordError && (
               <Alert severity="error" variant="outlined">
-                Incorrect Password!
+                {ko.rooms.incorrectPassword}
               </Alert>
             )}
           </DialogContent>
           <DialogActions>
             <Button color="secondary" onClick={resetPasswordDialog}>
-              Cancel
+              {ko.common.cancel}
             </Button>
             <Button color="secondary" type="submit">
-              Join
+              {ko.common.join}
             </Button>
           </DialogActions>
         </form>

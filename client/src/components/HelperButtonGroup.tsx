@@ -20,6 +20,7 @@ import { BackgroundMode } from '../../../types/BackgroundMode'
 import { setShowJoystick, toggleBackgroundMode } from '../stores/UserStore'
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { getAvatarString, getColorByString } from '../util'
+import { ko } from '../i18n/ko'
 
 const Backdrop = styled.div`
   position: fixed;
@@ -39,14 +40,15 @@ const Backdrop = styled.div`
 const Wrapper = styled.div`
   position: relative;
   font-size: 16px;
-  color: #eee;
-  background: #222639;
+  color: var(--ui-text);
+  background: var(--ui-surface);
   box-shadow: 0px 0px 5px #0000006f;
   border-radius: 16px;
   padding: 15px 35px 15px 15px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  border: 1px solid rgba(210, 188, 168, 0.24);
 
   .close {
     position: absolute;
@@ -66,7 +68,7 @@ const ButtonGroup = styled.div`
 
 const Title = styled.h3`
   font-size: 24px;
-  color: #eee;
+  color: var(--ui-text);
   text-align: center;
 `
 
@@ -83,7 +85,7 @@ const RoomName = styled.div`
 
   h3 {
     font-size: 24px;
-    color: #eee;
+    color: var(--ui-text);
   }
 `
 
@@ -94,7 +96,7 @@ const RoomDescription = styled.div`
   overflow-wrap: anywhere;
   overflow-y: auto;
   font-size: 16px;
-  color: #c2c2c2;
+  color: var(--ui-subtext);
   display: flex;
   justify-content: center;
 `
@@ -120,7 +122,7 @@ export default function HelperButtonGroup() {
     <Backdrop>
       <div className="wrapper-group">
         {roomJoined && (
-          <Tooltip title={showJoystick ? 'Disable virtual joystick' : 'Enable virtual joystick'}>
+          <Tooltip title={showJoystick ? ko.helper.disableJoystick : ko.helper.enableJoystick}>
             <StyledFab size="small" onClick={() => dispatch(setShowJoystick(!showJoystick))}>
               {showJoystick ? <VideogameAssetOffIcon /> : <VideogameAssetIcon />}
             </StyledFab>
@@ -138,43 +140,43 @@ export default function HelperButtonGroup() {
               <h3>{roomName}</h3>
             </RoomName>
             <RoomDescription>
-              <ArrowRightIcon /> ID: {roomId}
+              <ArrowRightIcon /> {ko.helper.roomId}: {roomId}
             </RoomDescription>
             <RoomDescription>
-              <ArrowRightIcon /> Description: {roomDescription}
+              <ArrowRightIcon /> {ko.common.description}: {roomDescription}
             </RoomDescription>
             <p className="tip">
               <LightbulbIcon />
-              Shareable link coming up 😄
+              {ko.helper.shareableLinkSoon}
             </p>
           </Wrapper>
         )}
         {showControlGuide && (
           <Wrapper>
-            <Title>Controls</Title>
+            <Title>{ko.helper.controlsTitle}</Title>
             <IconButton className="close" onClick={() => setShowControlGuide(false)} size="small">
               <CloseIcon />
             </IconButton>
             <ul>
               <li>
-                <strong>W, A, S, D or arrow keys</strong> to move
+                <strong>{ko.helper.move}</strong>
               </li>
               <li>
-                <strong>E</strong> to sit down (when facing a chair)
+                <strong>{ko.helper.sit}</strong>
               </li>
               <li>
-                <strong>R</strong> to use computer to screen share (when facing a computer)
+                <strong>{ko.helper.computer}</strong>
               </li>
               <li>
-                <strong>Enter</strong> to open chat
+                <strong>{ko.helper.openChat}</strong>
               </li>
               <li>
-                <strong>ESC</strong> to close chat
+                <strong>{ko.helper.closeChat}</strong>
               </li>
             </ul>
             <p className="tip">
               <LightbulbIcon />
-              Video connection will start if you are close to someone else
+              {ko.helper.proximityVideo}
             </p>
           </Wrapper>
         )}
@@ -182,7 +184,7 @@ export default function HelperButtonGroup() {
       <ButtonGroup>
         {roomJoined && (
           <>
-            <Tooltip title="Room Info">
+            <Tooltip title={ko.helper.roomInfo}>
               <StyledFab
                 size="small"
                 onClick={() => {
@@ -193,7 +195,7 @@ export default function HelperButtonGroup() {
                 <ShareIcon />
               </StyledFab>
             </Tooltip>
-            <Tooltip title="Control Guide">
+            <Tooltip title={ko.helper.controlGuide}>
               <StyledFab
                 size="small"
                 onClick={() => {
@@ -206,7 +208,7 @@ export default function HelperButtonGroup() {
             </Tooltip>
           </>
         )}
-        <Tooltip title="Visit Our GitHub">
+        <Tooltip title={ko.helper.github}>
           <StyledFab
             size="small"
             href="https://github.com/kevinshen56714/SkyOffice"
@@ -215,12 +217,12 @@ export default function HelperButtonGroup() {
             <GitHubIcon />
           </StyledFab>
         </Tooltip>
-        <Tooltip title="Follow Us on Twitter">
+        <Tooltip title={ko.helper.twitter}>
           <StyledFab size="small" href="https://twitter.com/SkyOfficeApp" target="_blank">
             <TwitterIcon />
           </StyledFab>
         </Tooltip>
-        <Tooltip title="Switch Background Theme">
+        <Tooltip title={ko.helper.toggleTheme}>
           <StyledFab size="small" onClick={() => dispatch(toggleBackgroundMode())}>
             {backgroundMode === BackgroundMode.DAY ? <DarkModeIcon /> : <LightModeIcon />}
           </StyledFab>

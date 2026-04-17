@@ -6,6 +6,7 @@ import CloseIcon from '@mui/icons-material/Close'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { closeComputerDialog } from '../stores/ComputerStore'
+import { ko } from '../i18n/ko'
 
 import Video from './Video'
 
@@ -21,14 +22,15 @@ const Backdrop = styled.div`
 const Wrapper = styled.div`
   width: 100%;
   height: 100%;
-  background: #222639;
+  background: var(--ui-surface);
   border-radius: 16px;
   padding: 16px;
-  color: #eee;
+  color: var(--ui-text);
   position: relative;
   display: flex;
   flex-direction: column;
   box-shadow: 0px 0px 5px #0000006f;
+  border: 1px solid rgba(210, 188, 168, 0.24);
 
   .close {
     position: absolute;
@@ -61,11 +63,11 @@ const VideoGrid = styled.div`
       object-fit: contain;
     }
 
-    .player-name {
+      .player-name {
       position: absolute;
       bottom: 16px;
       left: 16px;
-      color: #fff;
+      color: var(--ui-text);
       overflow: hidden;
       text-overflow: ellipsis;
       text-shadow: 0 1px 2px rgb(0 0 0 / 60%), 0 0 2px rgb(0 0 0 / 30%);
@@ -94,7 +96,7 @@ export default function ComputerDialog() {
     <Backdrop>
       <Wrapper>
         <IconButton
-          aria-label="close dialog"
+          aria-label={ko.common.close}
           className="close"
           onClick={() => dispatch(closeComputerDialog())}
         >
@@ -113,12 +115,12 @@ export default function ComputerDialog() {
               }
             }}
           >
-            {shareScreenManager?.myStream ? 'Stop sharing' : 'Share Screen'}
+            {shareScreenManager?.myStream ? ko.computer.shareStop : ko.computer.shareStart}
           </Button>
         </div>
 
         <VideoGrid>
-          {myStream && <VideoContainer stream={myStream} playerName="You" />}
+          {myStream && <VideoContainer stream={myStream} playerName={ko.computer.me} />}
 
           {[...peerStreams.entries()].map(([id, { stream }]) => {
             const playerName = playerNameMap.get(id)

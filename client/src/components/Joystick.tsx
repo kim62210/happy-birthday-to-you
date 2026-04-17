@@ -53,8 +53,8 @@ const JoystickItem = (props: Props) => {
   return (
     <Joystick
       size={75}
-      baseColor="#4b4b4b70"
-      stickColor="#42eacb80"
+      baseColor="#6b625970"
+      stickColor="#c8645888"
       stop={() => {
         props.onDirectionChange({
           isMoving: false,

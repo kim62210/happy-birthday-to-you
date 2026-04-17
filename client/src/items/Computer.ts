@@ -19,17 +19,17 @@ export default class Computer extends Item {
     const numberOfUsers = this.currentUsers.size
     this.clearStatusBox()
     if (numberOfUsers === 1) {
-      this.setStatusBox(`${numberOfUsers} user`)
+      this.setStatusBox(`${numberOfUsers}명 사용 중`)
     } else if (numberOfUsers > 1) {
-      this.setStatusBox(`${numberOfUsers} users`)
+      this.setStatusBox(`${numberOfUsers}명 사용 중`)
     }
   }
 
   onOverlapDialog() {
     if (this.currentUsers.size === 0) {
-      this.setDialogBox('Press R to use computer')
+      this.setDialogBox('R 키로 컴퓨터 사용')
     } else {
-      this.setDialogBox('Press R join')
+      this.setDialogBox('R 키로 함께 사용')
     }
   }
 

@@ -6,6 +6,7 @@ import AlertTitle from '@mui/material/AlertTitle'
 
 import phaserGame from '../PhaserGame'
 import Game from '../scenes/Game'
+import { ko } from '../i18n/ko'
 
 const Backdrop = styled.div`
   position: fixed;
@@ -34,9 +35,9 @@ export default function VideoConnectionDialog() {
               setConnectionWarning(!connectionWarning)
             }}
           >
-            <AlertTitle>Warning</AlertTitle>
-            No webcam connected
-            <br /> <strong>connect one for full experience!</strong>
+            <AlertTitle>{ko.video.warningTitle}</AlertTitle>
+            {ko.video.noWebcam}
+            <br /> <strong>{ko.video.connectForFull}</strong>
           </Alert>
         )}
         <Button
@@ -47,7 +48,7 @@ export default function VideoConnectionDialog() {
             game.network.webRTC?.getUserMedia()
           }}
         >
-          Connect Webcam
+          {ko.video.connectWebcam}
         </Button>
       </Wrapper>
     </Backdrop>

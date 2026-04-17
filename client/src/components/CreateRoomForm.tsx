@@ -9,6 +9,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff'
 
 import { IRoomData } from '../../../types/Rooms'
 import { useAppSelector } from '../hooks'
+import { ko } from '../i18n/ko'
 
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
@@ -58,21 +59,21 @@ export const CreateRoomForm = () => {
   return (
     <CreateRoomFormWrapper onSubmit={handleSubmit}>
       <TextField
-        label="Name"
+        label={ko.rooms.roomName}
         variant="outlined"
         color="secondary"
         autoFocus
         error={nameFieldEmpty}
-        helperText={nameFieldEmpty && 'Name is required'}
+        helperText={nameFieldEmpty && ko.rooms.nameRequired}
         onChange={handleChange('name')}
       />
 
       <TextField
-        label="Description"
+        label={ko.rooms.roomDescription}
         variant="outlined"
         color="secondary"
         error={descriptionFieldEmpty}
-        helperText={descriptionFieldEmpty && 'Description is required'}
+        helperText={descriptionFieldEmpty && ko.rooms.descriptionRequired}
         multiline
         rows={4}
         onChange={handleChange('description')}
@@ -80,14 +81,14 @@ export const CreateRoomForm = () => {
 
       <TextField
         type={showPassword ? 'text' : 'password'}
-        label="Password (optional)"
+        label={ko.rooms.passwordOptional}
         onChange={handleChange('password')}
         color="secondary"
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
               <IconButton
-                aria-label="toggle password visibility"
+                aria-label="비밀번호 보기 전환"
                 onClick={() => setShowPassword(!showPassword)}
                 edge="end"
               >
@@ -98,7 +99,7 @@ export const CreateRoomForm = () => {
         }}
       />
       <Button variant="contained" color="secondary" type="submit">
-        Create
+        {ko.roomSelection.createCustom}
       </Button>
     </CreateRoomFormWrapper>
   )

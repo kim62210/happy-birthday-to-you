@@ -13,6 +13,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { CustomRoomTable } from './CustomRoomTable'
 import { CreateRoomForm } from './CreateRoomForm'
 import { useAppSelector } from '../hooks'
+import { ko } from '../i18n/ko'
 
 import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
@@ -29,10 +30,11 @@ const Backdrop = styled.div`
 `
 
 const Wrapper = styled.div`
-  background: #222639;
+  background: var(--ui-surface);
   border-radius: 16px;
   padding: 36px 60px;
   box-shadow: 0px 0px 5px #0000006f;
+  border: 1px solid rgba(210, 188, 168, 0.24);
 `
 
 const CustomRoomWrapper = styled.div`
@@ -69,7 +71,7 @@ const TitleWrapper = styled.div`
 
 const Title = styled.h1`
   font-size: 24px;
-  color: #eee;
+  color: var(--ui-text);
   text-align: center;
 `
 
@@ -93,7 +95,7 @@ const ProgressBarWrapper = styled.div`
   align-items: center;
 
   h3 {
-    color: #33ac96;
+    color: var(--ui-accent-soft);
   }
 `
 
@@ -135,7 +137,7 @@ export default function RoomSelectionDialog() {
           // overwrites the dark theme on render
           style={{ background: '#fdeded', color: '#7d4747' }}
         >
-          Trying to connect to server, please try again!
+          {ko.roomSelection.connectRetry}
         </Alert>
       </Snackbar>
       <Backdrop>
@@ -146,7 +148,7 @@ export default function RoomSelectionDialog() {
                 <IconButton className="back-button" onClick={() => setShowCreateRoomForm(false)}>
                   <ArrowBackIcon />
                 </IconButton>
-                <Title>Create Custom Room</Title>
+                <Title>{ko.roomSelection.createCustom}</Title>
               </TitleWrapper>
               <CreateRoomForm />
             </CustomRoomWrapper>
@@ -157,9 +159,9 @@ export default function RoomSelectionDialog() {
                   <ArrowBackIcon />
                 </IconButton>
                 <Title>
-                  Custom Rooms
+                  {ko.roomSelection.customRooms}
                   <Tooltip
-                    title="We update the results in realtime, no refresh needed!"
+                    title={ko.roomSelection.realtimeTip}
                     placement="top"
                   >
                     <IconButton>
@@ -174,23 +176,23 @@ export default function RoomSelectionDialog() {
                 color="secondary"
                 onClick={() => setShowCreateRoomForm(true)}
               >
-                Create new room
+                {ko.roomSelection.createNewRoom}
               </Button>
             </CustomRoomWrapper>
           ) : (
             <>
-              <Title>Welcome to SkyOffice</Title>
+              <Title>{ko.roomSelection.welcome}</Title>
               <Content>
-                <img src={logo} alt="logo" />
+                <img src={logo} alt="스카이오피스 로고" />
                 <Button variant="contained" color="secondary" onClick={handleConnect}>
-                  Connect to public lobby
+                  {ko.roomSelection.connectPublic}
                 </Button>
                 <Button
                   variant="outlined"
                   color="secondary"
                   onClick={() => (lobbyJoined ? setShowCustomRoom(true) : setShowSnackbar(true))}
                 >
-                  Create/find custom rooms
+                  {ko.roomSelection.createOrFind}
                 </Button>
               </Content>
             </>
@@ -198,7 +200,7 @@ export default function RoomSelectionDialog() {
         </Wrapper>
         {!lobbyJoined && (
           <ProgressBarWrapper>
-            <h3> Connecting to server...</h3>
+            <h3>{ko.roomSelection.serverConnecting}</h3>
             <ProgressBar color="secondary" />
           </ProgressBarWrapper>
         )}

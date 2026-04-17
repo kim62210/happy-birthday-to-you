@@ -5,6 +5,7 @@ import CloseIcon from '@mui/icons-material/Close'
 
 import { useAppSelector, useAppDispatch } from '../hooks'
 import { closeWhiteboardDialog } from '../stores/WhiteboardStore'
+import { ko } from '../i18n/ko'
 
 const Backdrop = styled.div`
   position: fixed;
@@ -20,14 +21,15 @@ const Backdrop = styled.div`
 const Wrapper = styled.div`
   width: 100%;
   height: 100%;
-  background: #222639;
+  background: var(--ui-surface);
   border-radius: 16px;
   padding: 16px;
-  color: #eee;
+  color: var(--ui-text);
   position: relative;
   display: flex;
   flex-direction: column;
   min-width: max-content;
+  border: 1px solid rgba(210, 188, 168, 0.24);
 
   .close {
     position: absolute;
@@ -57,7 +59,7 @@ export default function WhiteboardDialog() {
     <Backdrop>
       <Wrapper>
         <IconButton
-          aria-label="close dialog"
+          aria-label={ko.common.close}
           className="close"
           onClick={() => dispatch(closeWhiteboardDialog())}
         >
@@ -65,7 +67,7 @@ export default function WhiteboardDialog() {
         </IconButton>
         {whiteboardUrl && (
           <WhiteboardWrapper>
-            <iframe title="white board" src={whiteboardUrl} />
+            <iframe title={ko.whiteboard.title} src={whiteboardUrl} />
           </WhiteboardWrapper>
         )}
       </Wrapper>
