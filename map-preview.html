@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Map Editor - Seoul Office</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #eee; font-family: 'Courier New', monospace; display: flex; height: 100vh; user-select: none; }
+
+  .sidebar {
+    width: 200px; background: #16213e; padding: 16px; overflow-y: auto;
+    border-right: 2px solid #333; flex-shrink: 0;
+  }
+  .sidebar h2 { font-size: 14px; color: #e94560; margin-bottom: 12px; }
+  .sidebar h3 { font-size: 11px; color: #888; margin: 12px 0 6px; text-transform: uppercase; }
+
+  .tool-btn {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    background: #1a1a3e; border: 1px solid #333; border-radius: 4px;
+    color: #ddd; font-size: 11px; cursor: pointer; margin-bottom: 4px;
+    width: 100%; font-family: inherit;
+  }
+  .tool-btn:hover { background: #252550; }
+  .tool-btn.active { border-color: #e94560; background: #2a1a3e; }
+  .tool-swatch { width: 20px; height: 20px; border: 1px solid #555; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+  .main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; overflow: auto; padding: 20px; }
+  .main h1 { font-size: 16px; color: #e94560; margin-bottom: 4px; }
+  .info { font-size: 11px; color: #888; margin-bottom: 16px; }
+
+  .grid { display: inline-grid; gap: 0; border: 2px solid #555; }
+  .cell {
+    width: 36px; height: 36px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 8px; text-align: center; line-height: 1.1;
+    cursor: pointer; position: relative;
+    border: 1px solid rgba(255,255,255,0.04);
+    pointer-events: auto;
+  }
+  .cell:hover { outline: 2px solid #e94560; outline-offset: -2px; z-index: 1; }
+  .cell span { pointer-events: none; }
+  .cell i { pointer-events: none; display: block; }
+
+  .t-wall { background: #4a4a6a; }
+  .t-floor { background: #2a2a3e; }
+  .t-corridor { background: #252540; }
+  .t-meeting { background: #1e3a5f; }
+  .t-desk-n { background: #5c4033; border-top: 3px solid #d4a843; }
+  .t-desk-s { background: #5c4033; border-bottom: 3px solid #d4a843; }
+  .t-desk-e { background: #5c4033; border-right: 3px solid #d4a843; }
+  .t-desk-w { background: #5c4033; border-left: 3px solid #d4a843; }
+  .t-chair { background: #2a2a3e; }
+  .t-door { background: #d4a843; }
+  .t-table { background: #6b4226; }
+  .t-whiteboard { background: #e0e0e0; color: #333; }
+  .t-partition { background: #555577; }
+  .t-computer { background: #2a4a6e; }
+  .t-spawn { background: #e94560; border-radius: 50%; }
+  .t-cake { background: #ff9ed8; }
+  .t-balloon { background: #66ccff; border-radius: 50%; }
+  .t-banner { background: #ffcc00; color: #333; }
+  .t-guestbook { background: #c4a882; }
+  .t-sofa { background: #8B5E3C; border-radius: 4px; }
+  .t-tv { background: #222; border: 2px solid #444; }
+  .t-fridge { background: #b0b8c0; }
+  .t-window { background: #88ccee; border: 1px solid #66aadd; }
+  .t-glass { background: rgba(136,200,230,0.3); border: 1px solid #88c8e6; box-shadow: inset 0 0 4px rgba(136,200,230,0.4); }
+  .t-plant { background: #2a2a3e; }
+  .t-plant::after { content:''; display:block; width:14px; height:16px; background:#3a8a3a; border-radius: 50% 50% 2px 2px; }
+  .t-printer { background: #888; border-radius: 2px; border-bottom: 2px solid #666; }
+  .t-vending { background: #2266aa; border: 1px solid #1155aa; border-radius: 2px; }
+  .t-bookshelf { background: #6b4226; border-top: 2px solid #8B5E3C; }
+  .t-sink { background: #aac8dd; border: 1px solid #88aacc; border-radius: 2px; }
+  .t-counter { background: #c4a070; border-bottom: 2px solid #a08050; }
+  .t-eraser { background: #1a1a2e; }
+
+  .actions { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  .action-btn {
+    padding: 8px 16px; background: #e94560; border: none; color: #fff;
+    border-radius: 4px; cursor: pointer; font-family: inherit; font-size: 12px;
+  }
+  .action-btn:hover { background: #c73652; }
+  .action-btn.secondary { background: #333; }
+  .action-btn.secondary:hover { background: #444; }
+
+  .context-menu {
+    position: fixed; background: #1e1e3e; border: 1px solid #555;
+    border-radius: 6px; padding: 4px 0; z-index: 100; display: none;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5); min-width: 140px;
+  }
+  .context-menu div {
+    padding: 6px 14px; font-size: 11px; cursor: pointer; color: #ddd;
+  }
+  .context-menu div:hover { background: #333366; }
+  .cm-sep { height: 1px !important; background: #444 !important; margin: 4px 0 !important; padding: 0 !important; cursor: default !important; }
+
+  .toast {
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 8px 20px; border-radius: 20px;
+    font-size: 12px; opacity: 0; transition: opacity 0.3s; z-index: 200;
+  }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <h2>Map Editor</h2>
+  <p style="font-size:10px;color:#999;margin-bottom:12px;line-height:1.5;">
+    1. Left panel: select tool<br>
+    2. Left click grid: place<br>
+    3. Drag: paint multiple<br>
+    4. Right click: rotate/remove
+  </p>
+
+  <h3>Structure</h3>
+  <button class="tool-btn" data-tool="wall"><div class="tool-swatch" style="background:#4a4a6a;"></div>Wall</button>
+  <button class="tool-btn active" data-tool="floor"><div class="tool-swatch" style="background:#2a2a3e;"></div>Floor</button>
+  <button class="tool-btn" data-tool="corridor"><div class="tool-swatch" style="background:#252540;"></div>Corridor</button>
+  <button class="tool-btn" data-tool="door"><div class="tool-swatch" style="background:#d4a843;"></div>Door</button>
+  <button class="tool-btn" data-tool="meeting"><div class="tool-swatch" style="background:#1e3a5f;"></div>Meeting Room</button>
+
+  <h3>Office</h3>
+  <button class="tool-btn" data-tool="desk-n"><div class="tool-swatch" style="background:#5c4033;border-top:2px solid #d4a843;"></div>Desk N</button>
+  <button class="tool-btn" data-tool="desk-s"><div class="tool-swatch" style="background:#5c4033;border-bottom:2px solid #d4a843;"></div>Desk S</button>
+  <button class="tool-btn" data-tool="desk-e"><div class="tool-swatch" style="background:#5c4033;border-right:2px solid #d4a843;"></div>Desk E</button>
+  <button class="tool-btn" data-tool="desk-w"><div class="tool-swatch" style="background:#5c4033;border-left:2px solid #d4a843;"></div>Desk W</button>
+  <button class="tool-btn" data-tool="chair"><div class="tool-swatch" style="background:#6a6a8a;border-radius:50%;"></div>Chair</button>
+  <button class="tool-btn" data-tool="computer"><div class="tool-swatch" style="background:#2a4a6e;"></div>Computer</button>
+  <button class="tool-btn" data-tool="partition"><div class="tool-swatch" style="background:#555577;"></div>Partition</button>
+  <button class="tool-btn" data-tool="whiteboard"><div class="tool-swatch" style="background:#e0e0e0;"></div>Whiteboard</button>
+  <button class="tool-btn" data-tool="table"><div class="tool-swatch" style="background:#6b4226;"></div>Table</button>
+
+  <h3>Office Extras</h3>
+  <button class="tool-btn" data-tool="plant"><div class="tool-swatch" style="background:#2a2a3e;"><div style="width:10px;height:10px;background:#3a8a3a;border-radius:50%;margin:auto;"></div></div>Plant</button>
+  <button class="tool-btn" data-tool="printer"><div class="tool-swatch" style="background:#888;border-radius:2px;"></div>Printer</button>
+  <button class="tool-btn" data-tool="vending"><div class="tool-swatch" style="background:#2266aa;border:1px solid #1155aa;"></div>Vending</button>
+  <button class="tool-btn" data-tool="bookshelf"><div class="tool-swatch" style="background:#6b4226;border-top:2px solid #8B5E3C;"></div>Bookshelf</button>
+
+  <h3>Kitchen</h3>
+  <button class="tool-btn" data-tool="sink"><div class="tool-swatch" style="background:#aac8dd;border:1px solid #88aacc;"></div>Sink</button>
+  <button class="tool-btn" data-tool="counter"><div class="tool-swatch" style="background:#c4a070;border-bottom:2px solid #a08050;"></div>Counter</button>
+
+  <h3>Home</h3>
+  <button class="tool-btn" data-tool="sofa"><div class="tool-swatch" style="background:#8B5E3C;border-radius:3px;"></div>Sofa</button>
+  <button class="tool-btn" data-tool="tv"><div class="tool-swatch" style="background:#222;border:2px solid #444;"></div>TV</button>
+  <button class="tool-btn" data-tool="fridge"><div class="tool-swatch" style="background:#b0b8c0;"></div>Fridge</button>
+
+  <h3>Party</h3>
+  <button class="tool-btn" data-tool="cake"><div class="tool-swatch" style="background:#ff9ed8;"></div>Cake</button>
+  <button class="tool-btn" data-tool="balloon"><div class="tool-swatch" style="background:#66ccff;border-radius:50%;"></div>Balloon</button>
+  <button class="tool-btn" data-tool="banner"><div class="tool-swatch" style="background:#ffcc00;"></div>Banner</button>
+  <button class="tool-btn" data-tool="guestbook"><div class="tool-swatch" style="background:#c4a882;"></div>Guestbook</button>
+
+  <h3>Structure 2</h3>
+  <button class="tool-btn" data-tool="window"><div class="tool-swatch" style="background:#88ccee;border:1px solid #66aadd;"></div>Window</button>
+  <button class="tool-btn" data-tool="glass"><div class="tool-swatch" style="background:rgba(136,200,230,0.3);border:1px solid #88c8e6;"></div>Glass Wall</button>
+
+  <h3>Special</h3>
+  <button class="tool-btn" data-tool="spawn"><div class="tool-swatch" style="background:#e94560;border-radius:50%;"></div>Spawn</button>
+  <button class="tool-btn" data-tool="eraser"><div class="tool-swatch" style="background:#1a1a2e;border:1px dashed #888;"></div>Eraser</button>
+</div>
+
+<div class="main">
+  <h1>Seoul Office</h1>
+  <div class="info">
+    Grid: <span id="grid-size">14 x 18</span> |
+    Tool: <span id="current-tool" style="color:#e94560;">floor</span>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div class="actions">
+    <button class="action-btn" onclick="saveMap()">Save</button>
+    <button class="action-btn" onclick="loadMap()" style="background:#3388cc;">Load</button>
+    <button class="action-btn secondary" onclick="exportJSON()">Export JSON</button>
+    <button class="action-btn secondary" onclick="clearAll()">Clear All</button>
+    <button class="action-btn secondary" onclick="resizeGrid()">Resize Grid</button>
+    <button class="action-btn secondary" onclick="loadDefault()">Reset Default</button>
+  </div>
+</div>
+
+<div class="context-menu" id="ctx-menu">
+  <div data-action="rotate-n">Rotate North</div>
+  <div data-action="rotate-s">Rotate South</div>
+  <div data-action="rotate-e">Rotate East</div>
+  <div data-action="rotate-w">Rotate West</div>
+  <div class="cm-sep"></div>
+  <div data-action="erase">Remove</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let gridData = [];
+let currentTool = 'floor';
+let isMouseDown = false;
+let ctxR = -1, ctxC = -1;
+let gridCols = 14, gridRows = 18;
+
+const LABELS = {
+  wall:'wall', floor:'', corridor:'', door:'door', meeting:'MTG',
+  'desk-n':'N','desk-s':'S','desk-e':'E','desk-w':'W',
+  chair:'chair', computer:'PC', partition:'||', whiteboard:'WB', table:'table',
+  sofa:'sofa', tv:'TV', fridge:'frdg',
+  cake:'cake', balloon:'bln', banner:'HBD', guestbook:'book', spawn:'spawn',
+  window:'', glass:'', plant:'', printer:'PRT', vending:'vend', bookshelf:'book', sink:'sink', counter:'cntr', eraser:''
+};
+
+function findCell(el) {
+  while (el && !el.dataset.r) el = el.parentElement;
+  return el;
+}
+
+function initGrid(cols, rows, data) {
+  gridCols = cols;
+  gridRows = rows;
+  gridData = [];
+  const el = document.getElementById('grid');
+  el.innerHTML = '';
+  el.style.gridTemplateColumns = `repeat(${cols}, 36px)`;
+
+  for (let r = 0; r < rows; r++) {
+    gridData[r] = [];
+    for (let c = 0; c < cols; c++) {
+      const t = (data && data[r] && data[r][c]) ? data[r][c] : 'floor';
+      gridData[r][c] = t;
+      const cell = document.createElement('div');
+      cell.className = `cell t-${t}`;
+      cell.dataset.r = r;
+      cell.dataset.c = c;
+      if (LABELS[t]) {
+        const span = document.createElement('span');
+        span.textContent = LABELS[t];
+        cell.appendChild(span);
+      }
+      el.appendChild(cell);
+    }
+  }
+  document.getElementById('grid-size').textContent = `${cols} x ${rows}`;
+}
+
+function setCell(r, c, tool) {
+  if (r < 0 || r >= gridRows || c < 0 || c >= gridCols) return;
+  const t = (tool === 'eraser') ? 'floor' : tool;
+  gridData[r][c] = t;
+  const el = document.getElementById('grid');
+  const cell = el.children[r * gridCols + c];
+  if (!cell) return;
+  cell.className = `cell t-${t}`;
+  cell.innerHTML = '';
+  if (LABELS[t]) {
+    const span = document.createElement('span');
+    span.textContent = LABELS[t];
+    cell.appendChild(span);
+  }
+}
+
+// Event delegation on grid
+const gridEl = document.getElementById('grid');
+
+gridEl.addEventListener('mousedown', function(e) {
+  if (e.button === 2) return;
+  e.preventDefault();
+  isMouseDown = true;
+  const cell = findCell(e.target);
+  if (!cell) return;
+  setCell(+cell.dataset.r, +cell.dataset.c, currentTool);
+});
+
+gridEl.addEventListener('mouseover', function(e) {
+  if (!isMouseDown) return;
+  const cell = findCell(e.target);
+  if (!cell) return;
+  setCell(+cell.dataset.r, +cell.dataset.c, currentTool);
+});
+
+document.addEventListener('mouseup', function() { isMouseDown = false; });
+
+gridEl.addEventListener('contextmenu', function(e) {
+  e.preventDefault();
+  const cell = findCell(e.target);
+  if (!cell) return;
+  ctxR = +cell.dataset.r;
+  ctxC = +cell.dataset.c;
+  const menu = document.getElementById('ctx-menu');
+  menu.style.display = 'block';
+  menu.style.left = e.clientX + 'px';
+  menu.style.top = e.clientY + 'px';
+});
+
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('.context-menu')) {
+    document.getElementById('ctx-menu').style.display = 'none';
+  }
+});
+
+document.getElementById('ctx-menu').addEventListener('click', function(e) {
+  const action = e.target.dataset.action;
+  if (!action) return;
+  if (action === 'erase') {
+    setCell(ctxR, ctxC, 'floor');
+  } else if (action.startsWith('rotate-')) {
+    const dir = action.split('-')[1];
+    setCell(ctxR, ctxC, 'desk-' + dir);
+  }
+  document.getElementById('ctx-menu').style.display = 'none';
+});
+
+// Tool selection
+document.querySelectorAll('.tool-btn').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.tool-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    currentTool = btn.dataset.tool;
+    document.getElementById('current-tool').textContent = currentTool;
+  });
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function() { t.classList.remove('show'); }, 2000);
+}
+
+var fileHandle = null;
+
+async function saveMap() {
+  localStorage.setItem('mapEditor_save', JSON.stringify({ cols: gridCols, rows: gridRows, data: gridData }));
+
+  var dataLine = '  var data = ' + JSON.stringify(gridData) + ';';
+  var html = document.documentElement.outerHTML;
+  var re = /  var data = \[.*?\];/s;
+  var updated = html.replace(re, dataLine);
+  updated = '<!DOCTYPE html>\n<html lang="ko">\n' + updated.replace(/^<html[^>]*>/, '') ;
+
+  try {
+    if (!fileHandle) {
+      fileHandle = await window.showSaveFilePicker({
+        suggestedName: 'map-preview.html',
+        types: [{ description: 'HTML', accept: {'text/html': ['.html']} }]
+      });
+    }
+    var writable = await fileHandle.createWritable();
+    await writable.write(updated);
+    await writable.close();
+    showToast('File saved!');
+  } catch(e) {
+    if (e.name === 'AbortError') return;
+    var blob = new Blob([updated], {type:'text/html'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'map-preview.html';
+    a.click();
+    showToast('Downloaded (overwrite the old file)');
+  }
+}
+
+function loadMap() {
+  var raw = localStorage.getItem('mapEditor_save');
+  if (!raw) { showToast('No saved data'); return; }
+  var save = JSON.parse(raw);
+  initGrid(save.cols, save.rows, save.data);
+  showToast('Loaded!');
+}
+
+function autoSave() {
+  localStorage.setItem('mapEditor_save', JSON.stringify({ cols: gridCols, rows: gridRows, data: gridData }));
+}
+setInterval(autoSave, 10000);
+
+function exportJSON() {
+  var data = JSON.stringify(gridData, null, 2);
+  navigator.clipboard.writeText(data).then(function() { showToast('JSON copied!'); });
+}
+
+function clearAll() {
+  if (!confirm('Clear all cells?')) return;
+  initGrid(gridCols, gridRows);
+}
+
+function resizeGrid() {
+  const input = prompt('cols x rows:', gridCols + ' x ' + gridRows);
+  if (!input) return;
+  const parts = input.split('x').map(function(s) { return parseInt(s.trim()); });
+  if (parts[0] > 0 && parts[1] > 0) initGrid(parts[0], parts[1]);
+}
+
+function loadDefault() {
+  var data = [
+    ["floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor"],
+    ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"],
+    ["window","meeting","meeting","meeting","wall","meeting","meeting","meeting","meeting","meeting","meeting","wall","meeting","meeting","meeting","meeting","meeting","window"],
+    ["window","meeting","table","meeting","wall","meeting","table","table","table","table","meeting","wall","meeting","table","table","table","meeting","window"],
+    ["wall","meeting","meeting","meeting","wall","meeting","meeting","meeting","meeting","meeting","meeting","wall","meeting","meeting","meeting","meeting","meeting","wall"],
+    ["wall","glass","glass","door","wall","door","glass","glass","glass","glass","glass","wall","door","glass","glass","glass","glass","wall"],
+    ["window","plant","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","printer","floor","plant","window"],
+    ["window","floor","desk-n","desk-n","desk-n","floor","floor","desk-n","desk-n","floor","floor","desk-n","desk-n","floor","desk-w","chair","floor","window"],
+    ["wall","floor","chair","chair","chair","floor","floor","chair","chair","floor","floor","chair","chair","floor","desk-w","floor","floor","wall"],
+    ["window","floor","computer","computer","computer","floor","floor","computer","computer","floor","floor","computer","computer","floor","wall","floor","floor","window"],
+    ["window","floor","chair","chair","chair","floor","floor","chair","chair","floor","floor","chair","chair","floor","desk-w","chair","floor","window"],
+    ["wall","floor","desk-s","desk-s","desk-s","floor","floor","desk-s","desk-s","floor","floor","desk-s","desk-s","floor","desk-w","floor","floor","wall"],
+    ["window","floor","desk-n","desk-n","desk-n","floor","floor","desk-n","desk-n","floor","floor","desk-n","desk-n","floor","plant","floor","floor","window"],
+    ["window","floor","chair","chair","chair","floor","floor","chair","chair","floor","floor","chair","chair","floor","floor","floor","floor","window"],
+    ["wall","floor","computer","computer","computer","floor","floor","computer","computer","floor","floor","computer","computer","floor","floor","floor","floor","wall"],
+    ["window","floor","chair","chair","chair","floor","floor","chair","chair","floor","floor","chair","chair","floor","floor","floor","floor","window"],
+    ["window","floor","desk-s","desk-s","desk-s","floor","floor","desk-s","desk-s","floor","floor","desk-s","desk-s","floor","floor","floor","floor","window"],
+    ["wall","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","spawn","floor","wall"],
+    ["wall","wall","wall","wall","wall","wall","floor","floor","floor","floor","wall","door","wall","wall","wall","wall","wall","wall"],
+    ["wall","plant","floor","floor","floor","floor","floor","floor","floor","floor","wall","floor","counter","counter","counter","counter","floor","wall"],
+    ["wall","floor","floor","floor","floor","floor","floor","floor","floor","floor","wall","floor","sink","floor","floor","vending","floor","wall"],
+    ["wall","floor","floor","floor","floor","floor","floor","floor","floor","floor","wall","wall","wall","wall","wall","wall","wall","wall"],
+    ["wall","meeting","meeting","meeting","meeting","door","floor","floor","floor","floor","door","floor","floor","floor","floor","floor","floor","wall"],
+    ["window","meeting","table","table","meeting","glass","floor","floor","floor","floor","glass","floor","floor","floor","floor","floor","floor","wall"],
+    ["window","meeting","table","table","meeting","glass","floor","plant","floor","floor","glass","floor","floor","floor","floor","floor","floor","wall"],
+    ["wall","meeting","meeting","meeting","meeting","glass","floor","floor","floor","floor","glass","floor","floor","floor","floor","floor","floor","wall"],
+    ["window","wall","wall","wall","wall","glass","floor","floor","floor","floor","glass","floor","floor","floor","floor","floor","floor","wall"],
+    ["window","meeting","meeting","meeting","meeting","glass","floor","floor","floor","floor","wall","wall","wall","wall","wall","wall","wall","wall"],
+    ["wall","meeting","table","table","meeting","door","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","wall"],
+    ["window","meeting","meeting","meeting","meeting","glass","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","floor","wall"],
+    ["wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall","wall"]
+  ];
+  initGrid(18, data.length, data);
+  showToast('Layout loaded');
+}
+
+var saved = localStorage.getItem('mapEditor_save');
+if (saved) {
+  var s = JSON.parse(saved);
+  initGrid(s.cols, s.rows, s.data);
+  showToast('Auto-loaded saved map');
+} else {
+  loadDefault();
+}
+</script>
+</body>
+</html>
