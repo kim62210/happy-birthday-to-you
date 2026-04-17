@@ -29,7 +29,7 @@ export default class Game extends Phaser.Scene {
   private keyR!: Phaser.Input.Keyboard.Key
   private map!: Phaser.Tilemaps.Tilemap
   myPlayer!: MyPlayer
-  private playerSelector!: Phaser.GameObjects.Zone
+  private playerSelector!: PlayerSelector
   private otherPlayers!: Phaser.Physics.Arcade.Group
   private otherPlayerMap = new Map<string, OtherPlayer>()
   computerMap = new Map<string, Computer>()
@@ -77,13 +77,23 @@ export default class Game extends Phaser.Scene {
 
     this.map = this.make.tilemap({ key: 'tilemap' })
     const FloorAndGround = this.map.addTilesetImage('FloorAndGround', 'tiles_wall')
+    const roomBuilderOffice = this.map.addTilesetImage(
+      'Room_Builder_Office_Archive',
+      'builder_office_archive'
+    )
+    const roomBuilderFloors = this.map.addTilesetImage(
+      'Room_Builder_Floors_Archive',
+      'builder_floors_archive'
+    )
 
     const groundLayer = this.map.createLayer('Ground', FloorAndGround)
     groundLayer.setCollisionByProperty({ collides: true })
+    groundLayer.setVisible(false)
+    this.map.createLayer('GroundVisual', [roomBuilderOffice, roomBuilderFloors])
 
     // debugDraw(groundLayer, this)
 
-    this.myPlayer = this.add.myPlayer(705, 500, 'adam', this.network.mySessionId)
+    this.myPlayer = this.add.myPlayer(512, 576, 'adam', this.network.mySessionId)
     this.playerSelector = new PlayerSelector(this, 0, 0, 16, 16)
 
     // import chair objects from Tiled map to Phaser
@@ -100,6 +110,7 @@ export default class Game extends Phaser.Scene {
     const computerLayer = this.map.getObjectLayer('Computer')
     computerLayer.objects.forEach((obj, i) => {
       const item = this.addObjectFromTiled(computers, obj, 'computers', 'computer') as Computer
+      item.setVisible(false)
       item.setDepth(item.y + item.height * 0.27)
       const id = `${i}`
       item.id = id
@@ -129,9 +140,15 @@ export default class Game extends Phaser.Scene {
     })
 
     // import other objects from Tiled map to Phaser
-    this.addGroupFromTiled('Wall', 'tiles_wall', 'FloorAndGround', false)
+    this.addGroupFromTiled('Wall', 'tiles_wall', 'FloorAndGround', true, false)
+    this.addGroupFromTiled('WallDecor', 'office_addons', 'Modern_Office_Addons', false)
+    this.addGroupFromTiled('FurnitureCollision', 'office', 'Modern_Office_Black_Shadow', true, false)
+    this.addGroupFromTiled('DeskVisuals', 'office_addons', 'Modern_Office_Addons', false)
+    this.addGroupFromTiled('MeetingVisuals', 'office_addons', 'Modern_Office_Addons', false)
     this.addGroupFromTiled('Objects', 'office', 'Modern_Office_Black_Shadow', false)
     this.addGroupFromTiled('ObjectsOnCollide', 'office', 'Modern_Office_Black_Shadow', true)
+    this.addGroupFromTiled('OfficeAddons', 'office_addons', 'Modern_Office_Addons', false)
+    this.addGroupFromTiled('OfficeAddonsOnCollide', 'office_addons', 'Modern_Office_Addons', true)
     this.addGroupFromTiled('GenericObjects', 'generic', 'Generic', false)
     this.addGroupFromTiled('GenericObjectsOnCollide', 'generic', 'Generic', true)
     this.addGroupFromTiled('Basement', 'basement', 'Basement', true)
@@ -206,16 +223,18 @@ export default class Game extends Phaser.Scene {
     objectLayerName: string,
     key: string,
     tilesetName: string,
-    collidable: boolean
+    collidable: boolean,
+    visible = true
   ) {
     const group = this.physics.add.staticGroup()
     const objectLayer = this.map.getObjectLayer(objectLayerName)
     objectLayer.objects.forEach((object) => {
       const actualX = object.x! + object.width! * 0.5
       const actualY = object.y! - object.height! * 0.5
-      group
+      const sprite = group
         .get(actualX, actualY, key, object.gid! - this.map.getTileset(tilesetName).firstgid)
         .setDepth(actualY)
+      if (!visible) sprite.setVisible(false)
     })
     if (this.myPlayer && collidable)
       this.physics.add.collider([this.myPlayer, this.myPlayer.playerContainer], group)
@@ -286,5 +305,19 @@ export default class Game extends Phaser.Scene {
       this.playerSelector.update(this.myPlayer, this.cursors)
       this.myPlayer.update(this.playerSelector, this.cursors, this.keyE, this.keyR, this.network)
     }
+  }
+
+  getSelectedItem() {
+    return this.playerSelector.selectedItem as Item | undefined
+  }
+
+  triggerPrimaryAction() {
+    if (!this.myPlayer || !this.network || !this.cursors) return false
+    return this.myPlayer.triggerPrimaryAction(this.playerSelector, this.cursors, this.network)
+  }
+
+  triggerSecondaryAction() {
+    if (!this.myPlayer || !this.network) return false
+    return this.myPlayer.triggerSecondaryAction(this.playerSelector, this.network)
   }
 }

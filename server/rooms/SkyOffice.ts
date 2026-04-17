@@ -39,8 +39,8 @@ export class SkyOffice extends Room<OfficeState> {
 
     this.setState(new OfficeState())
 
-    // HARD-CODED: Add 5 computers in a room
-    for (let i = 0; i < 5; i++) {
+    // HARD-CODED: Add 6 computers in a room
+    for (let i = 0; i < 6; i++) {
       this.state.computers.set(String(i), new Computer())
     }
 
@@ -159,7 +159,7 @@ export class SkyOffice extends Room<OfficeState> {
     if (this.password) {
       const validPassword = await bcrypt.compare(options.password, this.password)
       if (!validPassword) {
-        throw new ServerError(403, 'Password is incorrect!')
+        throw new ServerError(403, '비밀번호가 올바르지 않습니다.')
       }
     }
     return true
