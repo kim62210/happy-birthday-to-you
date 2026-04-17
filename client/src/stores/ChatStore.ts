@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { IChatMessage } from '../../../types/IOfficeState'
 import phaserGame from '../PhaserGame'
 import Game from '../scenes/Game'
+import { ko } from '../i18n/ko'
 
 export enum MessageType {
   PLAYER_JOINED,
@@ -9,12 +10,19 @@ export enum MessageType {
   REGULAR_MESSAGE,
 }
 
+function shouldOpenChatByDefault() {
+  if (typeof window === 'undefined' || typeof navigator === 'undefined') return true
+  const coarsePointer = window.matchMedia?.('(pointer: coarse)').matches ?? false
+  const touchDevice = 'maxTouchPoints' in navigator ? navigator.maxTouchPoints > 0 : false
+  return !(coarsePointer || touchDevice)
+}
+
 export const chatSlice = createSlice({
   name: 'chat',
   initialState: {
     chatMessages: new Array<{ messageType: MessageType; chatMessage: IChatMessage }>(),
     focused: false,
-    showChat: true,
+    showChat: shouldOpenChatByDefault(),
   },
   reducers: {
     pushChatMessage: (state, action: PayloadAction<IChatMessage>) => {
@@ -29,7 +37,7 @@ export const chatSlice = createSlice({
         chatMessage: {
           createdAt: new Date().getTime(),
           author: action.payload,
-          content: 'joined the lobby',
+          content: ko.chat.joined,
         } as IChatMessage,
       })
     },
@@ -39,7 +47,7 @@ export const chatSlice = createSlice({
         chatMessage: {
           createdAt: new Date().getTime(),
           author: action.payload,
-          content: 'left the lobby',
+          content: ko.chat.left,
         } as IChatMessage,
       })
     },

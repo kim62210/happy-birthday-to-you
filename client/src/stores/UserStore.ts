@@ -10,6 +10,15 @@ export function getInitialBackgroundMode() {
   return currentHour > 6 && currentHour <= 18 ? BackgroundMode.DAY : BackgroundMode.NIGHT
 }
 
+function shouldShowJoystickByDefault() {
+  const hasTouch =
+    typeof navigator !== 'undefined' &&
+    ('maxTouchPoints' in navigator
+      ? navigator.maxTouchPoints > 0
+      : window.matchMedia?.('(pointer: coarse)').matches)
+  return hasTouch || window.innerWidth < 1024
+}
+
 export const userSlice = createSlice({
   name: 'user',
   initialState: {
@@ -18,7 +27,7 @@ export const userSlice = createSlice({
     videoConnected: false,
     loggedIn: false,
     playerNameMap: new Map<string, string>(),
-    showJoystick: window.innerWidth < 650,
+    showJoystick: shouldShowJoystickByDefault(),
   },
   reducers: {
     toggleBackgroundMode: (state) => {

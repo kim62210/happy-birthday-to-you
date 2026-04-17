@@ -48,57 +48,26 @@ export default class MyPlayer extends Player {
     this.joystickMovement = movement
   }
 
-  update(
+  triggerPrimaryAction(
     playerSelector: PlayerSelector,
     cursors: NavKeys,
-    keyE: Phaser.Input.Keyboard.Key,
-    keyR: Phaser.Input.Keyboard.Key,
     network: Network
   ) {
-    if (!cursors) return
-
     const item = playerSelector.selectedItem
-
-    if (Phaser.Input.Keyboard.JustDown(keyR)) {
-      switch (item?.itemType) {
-        case ItemType.COMPUTER:
-          const computer = item as Computer
-          computer.openDialog(this.playerId, network)
-          break
-        case ItemType.WHITEBOARD:
-          const whiteboard = item as Whiteboard
-          whiteboard.openDialog(network)
-          break
-        case ItemType.VENDINGMACHINE:
-          // hacky and hard-coded, but leaving it as is for now
-          const url = 'https://www.buymeacoffee.com/skyoffice'
-          openURL(url)
-          break
-      }
-    }
 
     switch (this.playerBehavior) {
       case PlayerBehavior.IDLE:
-        // if press E in front of selected chair
-        if (Phaser.Input.Keyboard.JustDown(keyE) && item?.itemType === ItemType.CHAIR) {
+        if (item?.itemType === ItemType.CHAIR) {
           const chairItem = item as Chair
-          /**
-           * move player to the chair and play sit animation
-           * a delay is called to wait for player movement (from previous velocity) to end
-           * as the player tends to move one more frame before sitting down causing player
-           * not sitting at the center of the chair
-           */
           this.scene.time.addEvent({
             delay: 10,
             callback: () => {
-              // update character velocity and position
               this.setVelocity(0, 0)
               if (chairItem.itemDirection) {
                 this.setPosition(
                   chairItem.x + sittingShiftData[chairItem.itemDirection][0],
                   chairItem.y + sittingShiftData[chairItem.itemDirection][1]
                 ).setDepth(chairItem.depth + sittingShiftData[chairItem.itemDirection][2])
-                // also update playerNameContainer velocity and position
                 this.playContainerBody.setVelocity(0, 0)
                 this.playerContainer.setPosition(
                   chairItem.x + sittingShiftData[chairItem.itemDirection][0],
@@ -113,16 +82,69 @@ export default class MyPlayer extends Player {
               } else {
                 playerSelector.setPosition(0, 0)
               }
-              // send new location and anim to server
               network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
             },
             loop: false,
           })
-          // set up new dialog as player sits down
           chairItem.clearDialogBox()
-          chairItem.setDialogBox('Press E to leave')
+          chairItem.setDialogBox('E 키로 일어서기')
           this.chairOnSit = chairItem
           this.playerBehavior = PlayerBehavior.SITTING
+          return true
+        }
+        return false
+
+      case PlayerBehavior.SITTING:
+        {
+          const parts = this.anims.currentAnim.key.split('_')
+          parts[1] = 'idle'
+          this.play(parts.join('_'), true)
+          this.playerBehavior = PlayerBehavior.IDLE
+          this.chairOnSit?.clearDialogBox()
+          playerSelector.setPosition(this.x, this.y)
+          playerSelector.update(this, cursors)
+          network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+          return true
+        }
+      default:
+        return false
+    }
+  }
+
+  triggerSecondaryAction(playerSelector: PlayerSelector, network: Network) {
+    const item = playerSelector.selectedItem
+    switch (item?.itemType) {
+      case ItemType.COMPUTER:
+        ;(item as Computer).openDialog(this.playerId, network)
+        return true
+      case ItemType.WHITEBOARD:
+        ;(item as Whiteboard).openDialog(network)
+        return true
+      case ItemType.VENDINGMACHINE:
+        openURL('https://www.buymeacoffee.com/skyoffice')
+        return true
+      default:
+        return false
+    }
+  }
+
+  update(
+    playerSelector: PlayerSelector,
+    cursors: NavKeys,
+    keyE: Phaser.Input.Keyboard.Key,
+    keyR: Phaser.Input.Keyboard.Key,
+    network: Network
+  ) {
+    if (!cursors) return
+
+    if (Phaser.Input.Keyboard.JustDown(keyR)) {
+      this.triggerSecondaryAction(playerSelector, network)
+    }
+
+    switch (this.playerBehavior) {
+      case PlayerBehavior.IDLE:
+        // if press E in front of selected chair
+        if (Phaser.Input.Keyboard.JustDown(keyE) && this.triggerPrimaryAction(playerSelector, cursors, network)) {
           return
         }
 
@@ -185,14 +207,7 @@ export default class MyPlayer extends Player {
       case PlayerBehavior.SITTING:
         // back to idle if player press E while sitting
         if (Phaser.Input.Keyboard.JustDown(keyE)) {
-          const parts = this.anims.currentAnim.key.split('_')
-          parts[1] = 'idle'
-          this.play(parts.join('_'), true)
-          this.playerBehavior = PlayerBehavior.IDLE
-          this.chairOnSit?.clearDialogBox()
-          playerSelector.setPosition(this.x, this.y)
-          playerSelector.update(this, cursors)
-          network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
+          this.triggerPrimaryAction(playerSelector, cursors, network)
         }
         break
     }
