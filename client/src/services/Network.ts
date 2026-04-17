@@ -25,6 +25,7 @@ export default class Network {
   private client: Client
   private room?: Room<IOfficeState>
   private lobby!: Room
+  private lobbyRetryTimer?: number
   webRTC?: WebRTC
 
   mySessionId!: string
@@ -32,13 +33,24 @@ export default class Network {
   constructor() {
     const protocol = window.location.protocol.replace('http', 'ws')
     const endpoint =
-      process.env.NODE_ENV === 'production'
-        ? import.meta.env.VITE_SERVER_URL
-        : `${protocol}//${window.location.hostname}:2567`
+      import.meta.env.VITE_SERVER_URL || `${protocol}//${window.location.host}`
     this.client = new Client(endpoint)
-    this.joinLobbyRoom().then(() => {
-      store.dispatch(setLobbyJoined(true))
-    })
+    const connectLobby = () => {
+      this.joinLobbyRoom()
+        .then(() => {
+          store.dispatch(setLobbyJoined(true))
+          if (this.lobbyRetryTimer) {
+            window.clearTimeout(this.lobbyRetryTimer)
+            this.lobbyRetryTimer = undefined
+          }
+        })
+        .catch((error) => {
+          store.dispatch(setLobbyJoined(false))
+          console.error('로비 서버 연결 실패', endpoint, error)
+          this.lobbyRetryTimer = window.setTimeout(connectLobby, 1500)
+        })
+    }
+    connectLobby()
 
     phaserEvents.on(Event.MY_PLAYER_NAME_CHANGE, this.updatePlayerName, this)
     phaserEvents.on(Event.MY_PLAYER_TEXTURE_CHANGE, this.updatePlayer, this)
