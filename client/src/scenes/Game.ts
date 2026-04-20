@@ -20,6 +20,7 @@ import { ItemType } from '../../../types/Items'
 
 import store from '../stores'
 import { setFocused, setShowChat } from '../stores/ChatStore'
+import { openBirthdayImage } from '../stores/BirthdayStore'
 import { NavKeys, Keyboard } from '../../../types/KeyboardState'
 
 export default class Game extends Phaser.Scene {
@@ -34,9 +35,52 @@ export default class Game extends Phaser.Scene {
   private otherPlayerMap = new Map<string, OtherPlayer>()
   computerMap = new Map<string, Computer>()
   private whiteboardMap = new Map<string, Whiteboard>()
+  private birthdayPosters: Phaser.GameObjects.Sprite[] = []
+  private nearbyPoster: Phaser.GameObjects.Sprite | null = null
+  private posterHintText: Phaser.GameObjects.Text | null = null
 
   constructor() {
     super('game')
+  }
+
+  private addOfficeTitle() {
+    const bannerWidth = 300
+    const bannerHeight = 46
+    const centerX = 460
+    const centerY = 86
+
+    const shadow = this.add
+      .graphics()
+      .fillStyle(0x000000, 0.18)
+      .fillRoundedRect(centerX - bannerWidth / 2 + 3, centerY - bannerHeight / 2 + 4, bannerWidth, bannerHeight, 14)
+      .setScrollFactor(0)
+      .setDepth(7000)
+
+    const plate = this.add.graphics().setDepth(7001).setScrollFactor(0)
+    plate.fillStyle(0xf4efe7, 0.96)
+    plate.fillRoundedRect(centerX - bannerWidth / 2, centerY - bannerHeight / 2, bannerWidth, bannerHeight, 14)
+    plate.lineStyle(2, 0x6e6255, 0.92)
+    plate.strokeRoundedRect(centerX - bannerWidth / 2, centerY - bannerHeight / 2, bannerWidth, bannerHeight, 14)
+    plate.lineStyle(3, 0xc78a4a, 0.9)
+    plate.strokeLineShape(
+      new Phaser.Geom.Line(
+        centerX - bannerWidth / 2 + 18,
+        centerY + bannerHeight / 2 - 9,
+        centerX + bannerWidth / 2 - 18,
+        centerY + bannerHeight / 2 - 9
+      )
+    )
+
+    this.add
+      .text(centerX, centerY, '디지털전략센터', {
+        fontFamily: 'Noto Sans KR, Apple SD Gothic Neo, Malgun Gothic, sans-serif',
+        fontSize: '28px',
+        fontStyle: '700',
+        color: '#3d3228',
+      })
+      .setOrigin(0.5)
+      .setScrollFactor(0)
+      .setDepth(7002)
   }
 
   registerKeys() {
@@ -85,11 +129,13 @@ export default class Game extends Phaser.Scene {
       'Room_Builder_Floors_Archive',
       'builder_floors_archive'
     )
+    const genericVisuals = this.map.addTilesetImage('Generic', 'generic')
 
     const groundLayer = this.map.createLayer('Ground', FloorAndGround)
     groundLayer.setCollisionByProperty({ collides: true })
     groundLayer.setVisible(false)
-    this.map.createLayer('GroundVisual', [roomBuilderOffice, roomBuilderFloors])
+    this.map.createLayer('GroundVisual', [roomBuilderOffice, roomBuilderFloors, genericVisuals])
+    this.addOfficeTitle()
 
     // debugDraw(groundLayer, this)
 
@@ -110,7 +156,6 @@ export default class Game extends Phaser.Scene {
     const computerLayer = this.map.getObjectLayer('Computer')
     computerLayer.objects.forEach((obj, i) => {
       const item = this.addObjectFromTiled(computers, obj, 'computers', 'computer') as Computer
-      item.setVisible(false)
       item.setDepth(item.y + item.height * 0.27)
       const id = `${i}`
       item.id = id
@@ -143,8 +188,8 @@ export default class Game extends Phaser.Scene {
     this.addGroupFromTiled('Wall', 'tiles_wall', 'FloorAndGround', true, false)
     this.addGroupFromTiled('WallDecor', 'office_addons', 'Modern_Office_Addons', false)
     this.addGroupFromTiled('FurnitureCollision', 'office', 'Modern_Office_Black_Shadow', true, false)
-    this.addGroupFromTiled('DeskVisuals', 'office_addons', 'Modern_Office_Addons', false)
-    this.addGroupFromTiled('MeetingVisuals', 'office_addons', 'Modern_Office_Addons', false)
+    this.addGroupFromTiled('DeskVisuals', 'office_addons', 'Modern_Office_Addons', true)
+    this.addGroupFromTiled('MeetingVisuals', 'office_addons', 'Modern_Office_Addons', true)
     this.addGroupFromTiled('Objects', 'office', 'Modern_Office_Black_Shadow', false)
     this.addGroupFromTiled('ObjectsOnCollide', 'office', 'Modern_Office_Black_Shadow', true)
     this.addGroupFromTiled('OfficeAddons', 'office_addons', 'Modern_Office_Addons', false)
@@ -152,10 +197,16 @@ export default class Game extends Phaser.Scene {
     this.addGroupFromTiled('GenericObjects', 'generic', 'Generic', false)
     this.addGroupFromTiled('GenericObjectsOnCollide', 'generic', 'Generic', true)
     this.addGroupFromTiled('Basement', 'basement', 'Basement', true)
+    this.addGroupFromTiled('OfficeFurniture', 'office_furniture', 'Office_Furniture', true, true)
+    this.addGroupFromTiled('OfficeFurnitureVisual', 'office_furniture', 'Office_Furniture', false, true)
+
+    // birthday posters outside the building
+    this.createBirthdayPosters()
 
     this.otherPlayers = this.physics.add.group({ classType: OtherPlayer })
 
-    this.cameras.main.zoom = 1.5
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+    this.cameras.main.zoom = isMobile ? 0.75 : 1.5
     this.cameras.main.startFollow(this.myPlayer, true)
 
     this.physics.add.collider([this.myPlayer, this.myPlayer.playerContainer], groundLayer)
@@ -186,6 +237,59 @@ export default class Game extends Phaser.Scene {
     this.network.onItemUserAdded(this.handleItemUserAdded, this)
     this.network.onItemUserRemoved(this.handleItemUserRemoved, this)
     this.network.onChatMessageAdded(this.handleChatMessageAdded, this)
+  }
+
+  private createBirthdayPosters() {
+    const posterKeys = [
+      { key: 'poster_onepiece', src: 'assets/birthday/poster_onepiece.png' },
+      { key: 'poster_demonslayer', src: 'assets/birthday/poster_demonslayer.png' },
+      { key: 'poster_slamdunk', src: 'assets/birthday/poster_slamdunk.png' },
+      { key: 'poster_totoro', src: 'assets/birthday/poster_totoro.png' },
+      { key: 'poster_all', src: 'assets/birthday/poster_all.png' },
+    ]
+
+    const mapWidth = this.map.widthInPixels
+    const buildingBottom = 33 * 32 // y=33 is where outdoor starts
+    const posterWidth = 160
+    const posterHeight = 106
+    const gap = 16
+
+    // row 1: 3 posters
+    const row1Y = buildingBottom + 48 + posterHeight / 2
+    const row1Total = 3 * posterWidth + 2 * gap
+    const row1StartX = (mapWidth - row1Total) / 2 + posterWidth / 2
+
+    for (let i = 0; i < 3; i++) {
+      const x = row1StartX + i * (posterWidth + gap)
+      const sprite = this.add.sprite(x, row1Y, posterKeys[i].key)
+      sprite.setDisplaySize(posterWidth, posterHeight)
+      sprite.setDepth(row1Y)
+      sprite.setData('posterSrc', posterKeys[i].src)
+      sprite.setInteractive()
+      this.birthdayPosters.push(sprite)
+    }
+
+    // row 2: 2 posters centered
+    const row2Y = row1Y + posterHeight + 48
+    const row2Total = 2 * posterWidth + gap
+    const row2StartX = (mapWidth - row2Total) / 2 + posterWidth / 2
+
+    for (let i = 3; i < 5; i++) {
+      const x = row2StartX + (i - 3) * (posterWidth + gap)
+      const sprite = this.add.sprite(x, row2Y, posterKeys[i].key)
+      sprite.setDisplaySize(posterWidth, posterHeight)
+      sprite.setDepth(row2Y)
+      sprite.setData('posterSrc', posterKeys[i].src)
+      sprite.setInteractive()
+      this.birthdayPosters.push(sprite)
+    }
+
+    // click to open full image
+    this.birthdayPosters.forEach((poster) => {
+      poster.on('pointerdown', () => {
+        store.dispatch(openBirthdayImage(poster.getData('posterSrc')))
+      })
+    })
   }
 
   private handleItemSelectorOverlap(playerSelector, selectionItem) {

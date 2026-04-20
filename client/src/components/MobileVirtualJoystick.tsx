@@ -65,18 +65,25 @@ const StatusPill = styled.div`
   border: 1px solid rgba(210, 188, 168, 0.28);
 `
 
-export const minimumScreenWidthSize = 1024 // px
+const getShouldUseTouchControls = () => {
+  const hasTouch =
+    typeof navigator !== 'undefined' &&
+    ('maxTouchPoints' in navigator
+      ? navigator.maxTouchPoints > 0
+      : window.matchMedia?.('(pointer: coarse)').matches)
+  return hasTouch || window.innerWidth <= 1280
+}
 
-const useSmallScreen = (smallScreenSize: number) => {
-  const [width, setWidth] = useState(window.innerWidth)
+const useTouchControls = () => {
+  const [enabled, setEnabled] = useState(getShouldUseTouchControls())
 
   useEffect(() => {
-    const handleResize = () => setWidth(window.innerWidth)
+    const handleResize = () => setEnabled(getShouldUseTouchControls())
     window.addEventListener('resize', handleResize)
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
-  return width <= smallScreenSize
+  return enabled
 }
 
 type MobileContext = {
@@ -94,12 +101,12 @@ export default function MobileVirtualJoystick() {
   const showJoystick = useAppSelector((state) => state.user.showJoystick)
   const showChat = useAppSelector((state) => state.chat.showChat)
   const focused = useAppSelector((state) => state.chat.focused)
-  const hasSmallScreen = useSmallScreen(minimumScreenWidthSize)
+  const shouldUseTouchControls = useTouchControls()
   const [mobileContext, setMobileContext] = useState<MobileContext>(initialContext)
   const game = phaserGame.scene.keys.game as Game
 
   useEffect(() => {
-    if (!showJoystick || !hasSmallScreen) return
+    if (!showJoystick || !shouldUseTouchControls) return
 
     const timer = window.setInterval(() => {
       const selectedItem = game?.getSelectedItem?.()
@@ -110,7 +117,7 @@ export default function MobileVirtualJoystick() {
     }, 120)
 
     return () => window.clearInterval(timer)
-  }, [game, hasSmallScreen, showJoystick])
+  }, [game, shouldUseTouchControls, showJoystick])
 
   const handleMovement = (movement: JoystickMovement) => {
     game.myPlayer?.handleJoystickMovement(movement)
@@ -151,7 +158,7 @@ export default function MobileVirtualJoystick() {
             ? '자판기를 사용할 수 있어요.'
             : '왼쪽 조이스틱으로 이동하고 오른쪽 버튼으로 상호작용하세요.'
 
-  if (!showJoystick || !hasSmallScreen) return null
+  if (!showJoystick || !shouldUseTouchControls) return null
 
   return (
     <Overlay>

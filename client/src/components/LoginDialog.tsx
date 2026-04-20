@@ -31,6 +31,11 @@ const Wrapper = styled.form`
   padding: 36px 60px;
   box-shadow: 0px 0px 5px #0000006f;
   border: 1px solid rgba(210, 188, 168, 0.24);
+
+  @media (max-width: 768px) {
+    transform: translate(-50%, -50%) scale(0.5);
+    transform-origin: center center;
+  }
 `
 
 const Title = styled.p`
@@ -143,19 +148,40 @@ export default function LoginDialog() {
   const roomJoined = useAppSelector((state) => state.room.roomJoined)
   const roomName = useAppSelector((state) => state.room.roomName)
   const roomDescription = useAppSelector((state) => state.room.roomDescription)
-  const game = phaserGame.scene.keys.game as Game
+  const getCurrentGameScene = () => {
+    try {
+      return phaserGame.scene.getScene('game') as Game
+    } catch (error) {
+      return phaserGame.scene.keys.game as Game
+    }
+  }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    if (name === '') {
-      setNameFieldEmpty(true)
-    } else if (roomJoined) {
+  const tryJoinGame = (retries = 10) => {
+    const game = getCurrentGameScene()
+    if (
+      game?.myPlayer &&
+      typeof game.myPlayer.setPlayerName === 'function' &&
+      typeof game.myPlayer.setPlayerTexture === 'function'
+    ) {
       console.log('Join! Name:', name, 'Avatar:', avatars[avatarIndex].name)
       game.registerKeys()
       game.myPlayer.setPlayerName(name)
       game.myPlayer.setPlayerTexture(avatars[avatarIndex].name)
       game.network.readyToConnect()
       dispatch(setLoggedIn(true))
+    } else if (retries > 0) {
+      setTimeout(() => tryJoinGame(retries - 1), 500)
+    } else {
+      window.alert('게임 로딩 중입니다. 잠시 후 다시 시도해주세요.')
+    }
+  }
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (name === '') {
+      setNameFieldEmpty(true)
+    } else if (roomJoined) {
+      tryJoinGame()
     }
   }
 
@@ -214,6 +240,7 @@ export default function LoginDialog() {
                 variant="outlined"
                 color="secondary"
                 onClick={() => {
+                  const game = getCurrentGameScene()
                   game.network.webRTC?.getUserMedia()
                 }}
               >

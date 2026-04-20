@@ -19,14 +19,15 @@ import phaserGame from '../PhaserGame'
 import Bootstrap from '../scenes/Bootstrap'
 
 const Backdrop = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: 60px;
   align-items: center;
+  justify-content: center;
+  gap: 32px;
+  padding: 24px;
+  z-index: 1000;
 `
 
 const Wrapper = styled.div`
@@ -35,6 +36,14 @@ const Wrapper = styled.div`
   padding: 36px 60px;
   box-shadow: 0px 0px 5px #0000006f;
   border: 1px solid rgba(210, 188, 168, 0.24);
+  max-width: min(92vw, 780px);
+  max-height: min(88vh, 820px);
+  overflow: auto;
+
+  @media (max-width: 768px) {
+    transform: scale(0.5);
+    transform-origin: center center;
+  }
 `
 
 const CustomRoomWrapper = styled.div`
@@ -183,7 +192,7 @@ export default function RoomSelectionDialog() {
             <>
               <Title>{ko.roomSelection.welcome}</Title>
               <Content>
-                <img src={logo} alt="스카이오피스 로고" />
+                <img src={logo} alt="디지털전략센터 로고" />
                 <Button variant="contained" color="secondary" onClick={handleConnect}>
                   {ko.roomSelection.connectPublic}
                 </Button>

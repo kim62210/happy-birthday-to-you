@@ -67,6 +67,16 @@ export default class Bootstrap extends Phaser.Scene {
       frameWidth: 32,
       frameHeight: 32,
     })
+    this.load.spritesheet('office_furniture', 'assets/tileset/Office_Furniture.png', {
+      frameWidth: 32,
+      frameHeight: 32,
+    })
+    this.load.image('poster_all', 'assets/birthday/poster_all.png')
+    this.load.image('poster_onepiece', 'assets/birthday/poster_onepiece.png')
+    this.load.image('poster_demonslayer', 'assets/birthday/poster_demonslayer.png')
+    this.load.image('poster_slamdunk', 'assets/birthday/poster_slamdunk.png')
+    this.load.image('poster_totoro', 'assets/birthday/poster_totoro.png')
+
     CHARACTER_KEYS.forEach((characterKey) => {
       this.load.spritesheet(characterKey, `assets/character/${characterKey}.png`, {
         frameWidth: 32,
@@ -89,7 +99,10 @@ export default class Bootstrap extends Phaser.Scene {
   }
 
   launchGame() {
-    if (!this.preloadComplete) return
+    if (!this.preloadComplete) {
+      this.load.once('complete', () => this.launchGame())
+      return
+    }
     this.network.webRTC?.checkPreviousPermission()
     this.scene.launch('game', {
       network: this.network,

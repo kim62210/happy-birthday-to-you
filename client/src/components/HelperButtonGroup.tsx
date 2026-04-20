@@ -211,14 +211,14 @@ export default function HelperButtonGroup() {
         <Tooltip title={ko.helper.github}>
           <StyledFab
             size="small"
-            href="https://github.com/kevinshen56714/SkyOffice"
+            href="https://github.com/kim62210/happy-birthday-to-you"
             target="_blank"
           >
             <GitHubIcon />
           </StyledFab>
         </Tooltip>
         <Tooltip title={ko.helper.twitter}>
-          <StyledFab size="small" href="https://twitter.com/SkyOfficeApp" target="_blank">
+          <StyledFab size="small" href="https://github.com/kim62210/happy-birthday-to-you" target="_blank">
             <TwitterIcon />
           </StyledFab>
         </Tooltip>

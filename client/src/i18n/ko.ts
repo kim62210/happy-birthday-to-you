@@ -17,7 +17,7 @@ export const ko = {
     left: '님이 로비에서 나갔습니다',
   },
   roomSelection: {
-    welcome: 'SkyOffice에 오신 것을 환영합니다',
+    welcome: '디지털전략센터에 오신 것을 환영합니다',
     connectPublic: '공개 라운지 입장',
     createOrFind: '커스텀 방 찾기 / 만들기',
     createCustom: '커스텀 방 만들기',

@@ -2,7 +2,7 @@ import Phaser from 'phaser'
 import PlayerSelector from './PlayerSelector'
 import { PlayerBehavior } from '../../../types/PlayerBehavior'
 import { sittingShiftData } from './Player'
-import Player from './Player'
+import Player, { replaceAnimationState } from './Player'
 import Network from '../services/Network'
 import Chair from '../items/Chair'
 import Computer from '../items/Computer'
@@ -96,9 +96,7 @@ export default class MyPlayer extends Player {
 
       case PlayerBehavior.SITTING:
         {
-          const parts = this.anims.currentAnim.key.split('_')
-          parts[1] = 'idle'
-          this.play(parts.join('_'), true)
+          this.play(replaceAnimationState(this.anims.currentAnim.key, 'idle'), true)
           this.playerBehavior = PlayerBehavior.IDLE
           this.chairOnSit?.clearDialogBox()
           playerSelector.setPosition(this.x, this.y)
@@ -121,7 +119,7 @@ export default class MyPlayer extends Player {
         ;(item as Whiteboard).openDialog(network)
         return true
       case ItemType.VENDINGMACHINE:
-        openURL('https://www.buymeacoffee.com/skyoffice')
+        openURL('https://github.com/kim62210/happy-birthday-to-you')
         return true
       default:
         return false
@@ -192,12 +190,10 @@ export default class MyPlayer extends Player {
         } else if (vy < 0) {
           this.play(`${this.playerTexture}_run_up`, true)
         } else {
-          const parts = this.anims.currentAnim.key.split('_')
-          parts[1] = 'idle'
-          const newAnim = parts.join('_')
+          const newAnim = replaceAnimationState(this.anims.currentAnim.key, 'idle')
           // this prevents idle animation keeps getting called
           if (this.anims.currentAnim.key !== newAnim) {
-            this.play(parts.join('_'), true)
+            this.play(newAnim, true)
             // send new location and anim to server
             network.updatePlayer(this.x, this.y, this.anims.currentAnim.key)
           }

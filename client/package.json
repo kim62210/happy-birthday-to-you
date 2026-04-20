@@ -1,7 +1,7 @@
 {
-  "name": "skyoffice",
+  "name": "digitalstrategycenter-client",
   "private": true,
-  "description": "Client for SkyOffice",
+  "description": "Client for 디지털전략센터",
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",

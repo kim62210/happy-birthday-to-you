@@ -28,8 +28,8 @@ const FLOOR_MEETING = 479;
 const FLOOR_KITCHEN = 455;
 const FLOOR_EMPTY = 0;
 const FLOOR_VISUAL_OFFICE = FIRSTGID.ArchiveOffice + 110;
-const FLOOR_VISUAL_MEETING = FIRSTGID.ArchiveFloors + (4559 - 2865);
-const FLOOR_VISUAL_KITCHEN = FIRSTGID.ArchiveFloors + (3946 - 2865);
+const FLOOR_VISUAL_MEETING = FIRSTGID.Generic + 1;
+const FLOOR_VISUAL_KITCHEN = FIRSTGID.ArchiveFloors + 493;
 
 // Core office furniture
 const DESK_H = [2617, 2618, 2619];
@@ -39,12 +39,19 @@ const DESK_SIDE_E = 2630;
 // Meeting table 2x2
 const TABLE_TL = 2918, TABLE_TR = 2919, TABLE_BL = 2934, TABLE_BR = 2935;
 
-// Chair (chair tileset)
-const CHAIR = { down: 2562, left: 2563, right: 2564, up: 2566 };
+// Chair (chair tileset) - rotate through several visually compatible variants
+const CHAIR = {
+  down: [2561, 2562, 2565, 2571, 2572],
+  left: [2563, 2570],
+  right: [2564, 2569],
+  up: [2561, 2562, 2566, 2571, 2572],
+};
 
 // Computer (96x64)
 const COMPUTERS = [4680, 4681, 4682, 4683, 4684, 4685];
+const WHITEBOARDS = [4686, 4687, 4688];
 let compIdx = 0;
+let whiteboardIdx = 0;
 
 // Other
 const PLANT = 3003;
@@ -257,9 +264,39 @@ function buildMap(editorData) {
     meetingVisuals.push(obj(gid, mc, mr, TILE, TILE));
   }
 
+  function addOfficeObject(gid, mc, mr, collidable = false) {
+    const target = collidable ? objectsCollide : objects;
+    target.push(obj(gid, mc, mr, TILE, TILE));
+  }
+
+  function addArchiveOfficeObject(archiveGid, mc, mr, collidable = false) {
+    const runtimeGid = FIRSTGID.ModernOffice + (archiveGid - 225);
+    addOfficeObject(runtimeGid, mc, mr, collidable);
+  }
+
+  function addGenericObject(gid, mc, mr, collidable = false) {
+    const target = collidable ? genericObjCollide : genericObj;
+    target.push(obj(gid, mc, mr, TILE, TILE));
+  }
+
+  function addArchiveGenericObject(archiveGid, mc, mr, collidable = false) {
+    const runtimeGid = FIRSTGID.Generic + (archiveGid - 1073);
+    addGenericObject(runtimeGid, mc, mr, collidable);
+  }
+
+  function addPattern(gids, mc, mr, width, addFn) {
+    gids.forEach((gid, index) => {
+      const col = mc + (index % width);
+      const row = mr + Math.floor(index / width);
+      addFn(gid, col, row);
+    });
+  }
+
   function addChairAt(mc, mr, direction) {
+    const variants = CHAIR[direction];
+    const gid = variants[(mc + mr) % variants.length];
     chairs.push(
-      obj(CHAIR[direction], mc, mr, TILE, 64, [
+      obj(gid, mc, mr, TILE, 64, [
         { name: "direction", type: "string", value: direction },
       ])
     );
@@ -432,18 +469,25 @@ function buildMap(editorData) {
           furnitureCollision.push(obj(DESK_SIDE_E, mc, mr, TILE, TILE));
           addDeskVisual(ADDON.DESK1_BOTTOM, mc, mr);
           break;
-        case "chair":
+        case "chair": {
           const dir = chairDir(er, ec);
-          chairs.push(obj(CHAIR[dir], mc, mr, TILE, 64, [
+          const variants = CHAIR[dir];
+          const gid = variants[(er + ec) % variants.length];
+          chairs.push(obj(gid, mc, mr, TILE, 64, [
             { name: "direction", type: "string", value: dir }
           ]));
           break;
+        }
         case "computer": {
           const run = hrun(er, ec, "computer");
           addComputerForRun(run, mr);
           run.forEach(col => mark(er, col));
           break;
         }
+        case "whiteboard":
+          whiteboards.push(obj(WHITEBOARDS[whiteboardIdx % WHITEBOARDS.length], mc, mr, 64, 64));
+          whiteboardIdx++;
+          break;
         case "window":
           addAddon(
             objectOrientation(er, ec, "window") === "v" ? ADDON.WINDOW_V : ADDON.WINDOW_H,
@@ -500,6 +544,8 @@ function buildMap(editorData) {
           objectsCollide.push(obj(PRINTER_L, mc, mr, TILE, TILE));
           break;
         case "vending":
+          vendingMachines.push(obj(FIRSTGID.vendingmachine, mc, mr, 48, 72));
+          break;
         case "counter":
         case "sink":
           break;
@@ -562,6 +608,73 @@ function buildMap(editorData) {
     // Chairs around lower-left meeting table for a more real office feel
     addChairAt(2, 24, "right");
     addChairAt(2, 29, "right");
+
+    // --- Curated room dressing using high-confidence archive furniture tiles ---
+    // Meeting rooms: presentation screens and corner plants, without blocking chairs/tables.
+    addPattern([410, 411], 7, 2, 2, addArchiveOfficeObject);
+    addPattern([410, 411], 14, 2, 2, addArchiveOfficeObject);
+    addArchiveOfficeObject(439, 5, 4);
+    addArchiveOfficeObject(439, 11, 4);
+    addArchiveOfficeObject(439, 12, 4);
+    addArchiveOfficeObject(439, 17, 4);
+    addArchiveOfficeObject(389, 1, 4);
+    addArchiveOfficeObject(405, 16, 4);
+    addArchiveGenericObject(2088, 2, 2);
+    addArchiveGenericObject(2104, 15, 2);
+
+    // Open-office perimeter: only wall-adjacent decor.
+    addArchiveOfficeObject(439, 1, 16);
+    addArchiveOfficeObject(439, 18, 16);
+    addPattern([410, 411], 1, 10, 2, addArchiveOfficeObject);
+    addPattern([410, 411], 14, 10, 2, addArchiveOfficeObject);
+    addArchiveOfficeObject(455, 1, 7);
+    addArchiveOfficeObject(455, 18, 7);
+
+    // Lower-left focus rooms: small private-office treatment.
+    addPattern([410, 411], 2, 22, 2, addArchiveOfficeObject);
+    addPattern([410, 411], 2, 28, 2, addArchiveOfficeObject);
+    addArchiveOfficeObject(439, 1, 27);
+    addArchiveOfficeObject(439, 6, 27);
+    addPattern([472, 473, 488, 489], 3, 22, 2, addArchiveOfficeObject);
+    addPattern([504, 505], 3, 28, 2, addArchiveOfficeObject);
+    addArchiveGenericObject(1771, 5, 22);
+    addArchiveGenericObject(1772, 6, 22);
+    addArchiveGenericObject(1787, 5, 28);
+    addArchiveGenericObject(1788, 6, 28);
+
+    // Break room: sofa + coffee table composition, plus wall display and corner plants.
+    addPattern([579, 580, 581], 13, 29, 3, addArchiveOfficeObject);
+    addPattern([699, 700, 701], 13, 28, 3, addArchiveOfficeObject);
+    addPattern([410, 411], 14, 27, 2, addArchiveOfficeObject);
+    addArchiveOfficeObject(439, 12, 28);
+    addArchiveOfficeObject(439, 18, 28);
+    addPattern([472, 473, 488, 489], 13, 20, 2, addArchiveOfficeObject);
+    addPattern([595, 596, 611, 612, 627, 628], 16, 20, 2, addArchiveOfficeObject);
+    addArchiveOfficeObject(455, 15, 21);
+    addArchiveOfficeObject(369, 11, 27);
+    addArchiveOfficeObject(370, 12, 27);
+    addArchiveOfficeObject(372, 11, 28);
+    addArchiveOfficeObject(373, 12, 28);
+    addArchiveOfficeObject(374, 12, 29);
+    addArchiveOfficeObject(468, 11, 29);
+    addArchiveOfficeObject(469, 12, 29);
+    addArchiveOfficeObject(484, 11, 30);
+    addArchiveOfficeObject(485, 12, 30);
+    addArchiveOfficeObject(493, 16, 27);
+    addArchiveOfficeObject(509, 17, 27);
+    addAddon(ADDON.KITCHEN_LEFT, 13, 20, true);
+    addAddon(ADDON.KITCHEN_SNACK, 14, 20, true);
+    addAddon(ADDON.KITCHEN_RIGHT, 15, 20, true);
+    addAddon(ADDON.KITCHEN_FILL, 13, 21);
+    addAddon(ADDON.KITCHEN_COFFEE_ALT, 14, 21, true);
+    addAddon(ADDON.KITCHEN_RIGHT_ALT, 15, 21, true);
+    addAddon(ADDON.SIGN_WINDOW, 14, 19);
+    addAddon(ADDON.SIGN_LOUNGE, 15, 19);
+    addAddon(ADDON.PARTITION_H, 13, 22);
+    addAddon(ADDON.PARTITION_H, 14, 22);
+    addAddon(ADDON.PARTITION_H, 15, 22);
+    addAddon(ADDON.PARTITION_V, 12, 21);
+    addAddon(ADDON.GLASS_DOOR_V, 18, 21);
   }
 
   decorateOffice();
@@ -626,10 +739,43 @@ function buildMap(editorData) {
   };
 }
 
+function validateTileLayerGids(mapJson) {
+  const gidRanges = mapJson.tilesets.map((tileset) => ({
+    name: tileset.name,
+    firstgid: tileset.firstgid,
+    lastgid: tileset.firstgid + tileset.tilecount - 1,
+  }));
+
+  const invalidTiles = [];
+
+  mapJson.layers.forEach((layer) => {
+    if (layer.type !== "tilelayer") return;
+
+    layer.data.forEach((gid, index) => {
+      if (gid === 0) return;
+
+      const hasTileset = gidRanges.some((range) => gid >= range.firstgid && gid <= range.lastgid);
+      if (!hasTileset) {
+        invalidTiles.push({ layer: layer.name, gid, index });
+      }
+    });
+  });
+
+  if (invalidTiles.length > 0) {
+    const summary = invalidTiles
+      .slice(0, 10)
+      .map(({ layer, gid, index }) => `${layer}@${index}=${gid}`)
+      .join(", ");
+
+    throw new Error(`Generated map contains tile gids without a tileset: ${summary}`);
+  }
+}
+
 // --- Main ---
 const data = parseEditorData();
 console.log(`[generate-map] ${data[0].length}x${data.length} grid`);
 const mapJson = buildMap(data);
+validateTileLayerGids(mapJson);
 mapJson.layers.forEach(l => {
   if (l.type === "tilelayer") console.log(`  Ground: ${l.data.filter(d => d > 0).length}/${l.data.length}`);
   else console.log(`  ${l.name}: ${l.objects.length} objects`);

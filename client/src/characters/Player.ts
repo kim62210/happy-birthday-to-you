@@ -11,6 +11,23 @@ export const sittingShiftData = {
   right: [0, -8, 10],
 }
 
+export const getAnimationDirection = (animationKey: string) => {
+  const parts = animationKey.split('_')
+  return parts[parts.length - 1]
+}
+
+export const getAnimationState = (animationKey: string) => {
+  const parts = animationKey.split('_')
+  return parts[parts.length - 2]
+}
+
+export const replaceAnimationState = (animationKey: string, nextState: string) => {
+  const parts = animationKey.split('_')
+  if (parts.length < 2) return animationKey
+  parts[parts.length - 2] = nextState
+  return parts.join('_')
+}
+
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   playerId: string
   playerTexture: string

@@ -10,8 +10,10 @@ function colyseusProxy(): Plugin {
     configureServer(server) {
       server.httpServer?.on('upgrade', (req, socket, head) => {
         const url = req.url || ''
+        // Vite HMR uses /@vite/client or similar paths - skip those
+        if (url.startsWith('/@') || url === '/') return
         const segments = url.split('?')[0].split('/').filter(Boolean)
-        if (segments.length < 2) return
+        if (segments.length < 1) return
 
         const proxy = connect(COLYSEUS_BACKEND.port, COLYSEUS_BACKEND.host, () => {
           const headers = Object.entries(req.headers)

@@ -1,6 +1,6 @@
 # Getting Started with Vite
 
-SkyOffice's client side was bootstrapped with [Vite](https://vitejs.dev/).
+디지털전략센터 client side was bootstrapped with [Vite](https://vitejs.dev/).
 
 ## Available Scripts
 

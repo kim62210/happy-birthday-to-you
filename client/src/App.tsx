@@ -9,13 +9,51 @@ import ComputerDialog from './components/ComputerDialog'
 import WhiteboardDialog from './components/WhiteboardDialog'
 import VideoConnectionDialog from './components/VideoConnectionDialog'
 import Chat from './components/Chat'
+import BirthdayImageDialog from './components/BirthdayImageDialog'
 import HelperButtonGroup from './components/HelperButtonGroup'
 import MobileVirtualJoystick from './components/MobileVirtualJoystick'
 
 const Backdrop = styled.div`
-  position: absolute;
+  position: relative;
+  z-index: 5;
   height: 100%;
   width: 100%;
+`
+
+const MapNameplate = styled.div`
+  position: fixed;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  pointer-events: none;
+  min-width: 320px;
+  padding: 12px 28px;
+  border-radius: 999px;
+  background: rgba(244, 239, 231, 0.96);
+  border: 2px solid rgba(110, 98, 85, 0.92);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.16);
+  color: #3d3228;
+  font-family: 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  letter-spacing: -0.04em;
+
+  &::after {
+    content: '';
+    display: block;
+    height: 4px;
+    margin-top: 8px;
+    border-radius: 999px;
+    background: linear-gradient(
+      90deg,
+      rgba(199, 138, 74, 0.1),
+      rgba(199, 138, 74, 0.95),
+      rgba(199, 138, 74, 0.1)
+    );
+  }
 `
 
 function App() {
@@ -24,6 +62,7 @@ function App() {
   const whiteboardDialogOpen = useAppSelector((state) => state.whiteboard.whiteboardDialogOpen)
   const videoConnected = useAppSelector((state) => state.user.videoConnected)
   const roomJoined = useAppSelector((state) => state.room.roomJoined)
+  const birthdayImageOpen = useAppSelector((state) => state.birthday.imageOpen)
 
   let ui: JSX.Element
   if (loggedIn) {
@@ -55,7 +94,10 @@ function App() {
   return (
     <Backdrop>
       {ui}
-      {/* Render HelperButtonGroup if no dialogs are opened. */}
+      {loggedIn && !computerDialogOpen && !whiteboardDialogOpen && (
+        <MapNameplate>디지털전략센터</MapNameplate>
+      )}
+      {birthdayImageOpen && <BirthdayImageDialog />}
       {!computerDialogOpen && !whiteboardDialogOpen && <HelperButtonGroup />}
     </Backdrop>
   )
